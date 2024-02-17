@@ -7,10 +7,15 @@ namespace NerdCritica.Infrastructure.Context
 {
     public class DapperContext
     {
-        private readonly IConfiguration _configuration;
-        private readonly string _connectionString;
+        private readonly IConfiguration? _configuration;
+        private readonly string? _connectionString;
         public DapperContext(IConfiguration configuration)
         {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
             _configuration = configuration;
             _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }

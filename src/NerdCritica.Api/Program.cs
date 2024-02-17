@@ -1,5 +1,8 @@
 using System.Net;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
+using NerdCritica.Api.Extensions;
+using NerdCritica.Application.Services.Movies;
 using NerdCritica.Infrastructure.Context;
 using NerdCritica.Infrastructure.DependencyInjection;
 using Newtonsoft.Json;
@@ -8,13 +11,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddUserContext(builder.Configuration);
-builder.Services.AddAutoMapper(typeof(Program));
 builder.Services
  .AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
+builder.Services.AddScoped<IMoviePostService, MoviePostService>();
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? new byte[0]: Encoding.ASCII.
+    GetBytes(jwtSettings["Key"] ?? string.Empty);
+
+builder.Services.AddJwtAuthentication(key);
+builder.Services.ConfigureIdentityOptions();
 
 
 builder.Services.AddEndpointsApiExplorer();

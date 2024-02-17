@@ -9,6 +9,7 @@ namespace NerdCritica.Domain.Entities;
 public class MoviePost
 {
   public Guid MoviePostId { get; private set; }
+  public string CreatorUserId { get; private set; }
   public string MoviePostImagePath { get; private set; } = string.Empty;
   public byte[] MoviePostImage { get; private set; } = new byte[0];
   public string MoviePostTitle { get; private set; } = string.Empty;
@@ -16,10 +17,11 @@ public class MoviePost
   public string Category { get; private set; } = string.Empty;
 
 
-    private MoviePost(Guid moviePostId, string profileImagePath, byte[] profileImage, 
+    private MoviePost(Guid moviePostId, string creatorUserId, string profileImagePath, byte[] profileImage,
         string moviePostTitle, string moviePostDescription, string category)
     {
         MoviePostId = moviePostId;
+        CreatorUserId = creatorUserId;
         MoviePostImagePath = profileImagePath;
         MoviePostImage = profileImage;
         MoviePostTitle = moviePostTitle;
@@ -27,10 +29,10 @@ public class MoviePost
         Category = category;
     }
 
-    public static MoviePost Create(Guid moviePostId, string moviePostImagePath, byte[] moviePostImage,
+    public static MoviePost Create(Guid moviePostId,string creatorUserId, string moviePostImagePath, byte[] moviePostImage,
         string moviePostTitle, string moviePostDescription, string category)
     {
-      return new MoviePost(moviePostId, moviePostImagePath, moviePostImage,
+      return new MoviePost(moviePostId, creatorUserId, moviePostImagePath, moviePostImage,
         moviePostTitle, moviePostDescription, category);
     }
 

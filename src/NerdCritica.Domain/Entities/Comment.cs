@@ -1,16 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+namespace NerdCritica.Domain.Entities;
 
-namespace NerdCritica.Domain.Entities
+public class Comment
 {
-    public class Comment
+    public Guid CommentId { get; private set; }
+    public Guid RatingId { get; private set; }
+    public string IdentityUserId { get; private set; } = string.Empty;
+    public string Content { get; private set; } = string.Empty;
+
+    private Comment(Guid commentId, Guid ratingId, string identityUserId, string content)
     {
-        public int CommentId { get; set; }
-        public int RatingId { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
+        CommentId = commentId;
+        RatingId = ratingId;
+        IdentityUserId = identityUserId;
+        Content = content;
+    }
+
+    public static Comment Create(Guid commentId, Guid ratingId, string userId, string content)
+    {
+        return new Comment(commentId, ratingId, userId, content);
+    }
+
+    public static void Update(Comment comment, string newContent)
+    {
+        comment.Content = newContent;
     }
 }

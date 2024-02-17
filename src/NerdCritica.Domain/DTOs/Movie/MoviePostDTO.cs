@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
-namespace NerdCritica.Domain.DTOs;
+using NerdCritica.Domain.Entities;
+
+namespace NerdCritica.Domain.DTOs.Movie;
 
 public record MoviePostDTO(
     Guid MoviePostId,
@@ -12,7 +10,7 @@ public record MoviePostDTO(
     string MoviePostTitle,
     string MoviePostDescription,
     decimal Rating,
-    string Commentary,
+    ICollection<Comment> Comments,
     string Category,
     DateTime CreatedAt,
     DateTime UpdatedAt

@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NerdCritica.Domain.DTOs;
+namespace NerdCritica.Domain.DTOs.Movie;
 
 public record MovieRatingDTO(
     Guid RatingId,
     Guid MoviePostId,
-    string UserId,
+    string IdentityUserId,
     decimal Rating,
     IEnumerable<Comment> Comments,
     DateTime CreatedAt,
