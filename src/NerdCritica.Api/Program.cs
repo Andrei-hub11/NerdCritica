@@ -19,7 +19,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
         .AddDefaultTokenProviders();
 builder.Services.AddScoped<IMoviePostService, MoviePostService>();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? new byte[0]: Encoding.ASCII.
+var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? Array.Empty<byte>() : Encoding.ASCII.
     GetBytes(jwtSettings["Key"] ?? string.Empty);
 
 builder.Services.AddJwtAuthentication(key);

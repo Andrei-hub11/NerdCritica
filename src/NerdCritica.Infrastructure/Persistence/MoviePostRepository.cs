@@ -13,7 +13,7 @@ public class MoviePostRepository : IMoviePostRepository
         _dapperContext = dapperContext;
     }
 
-    public Task<IEnumerable<MoviePostDTO>> GetMoviePostsAsync(CancellationToken token)
+    public Task<IEnumerable<MoviePostResponseDTO>> GetMoviePostsAsync(CancellationToken token)
     {
         throw new NotImplementedException();
     }

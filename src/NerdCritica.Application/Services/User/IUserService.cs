@@ -1,12 +1,11 @@
-﻿
-
-using NerdCritica.Domain.DTOs;
+﻿using NerdCritica.Domain.DTOs.Movie;
+using NerdCritica.Domain.DTOs.User;
 
 namespace NerdCritica.Application.Services.User;
 
 public interface IUserService
 {
-    Task<UserDTO> GetUserByIdAsync(string userId, CancellationToken cancellationToken);
-    Task<MovieRatingDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
-    Task<UserDTO> UpdateUserAsync(UserDTO userDTO, CancellationToken cancellationToken);
+    Task<ProfileUserResponseDTO> GetUserByIdAsync(string userId, CancellationToken cancellationToken);
+    Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
+    Task<ProfileUserResponseDTO> UpdateUserAsync(ProfileUserResponseDTO userDTO, CancellationToken cancellationToken);
 }

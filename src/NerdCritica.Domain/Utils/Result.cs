@@ -1,51 +1,65 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NerdCritica.Domain.Utils;
 
+public class Error
+{
+    public string Description { get; }
+
+    public Error(string description)
+    {
+        Description = description;
+    }
+}
+
 public class Result
 {
-    protected Result(bool success, string error)
+    private List<Error> _errors;
+    protected Result(bool success, List<Error> error)
     {
-        if (success && error != string.Empty)
-            throw new InvalidOperationException();
-        if (!success && error == string.Empty)
-            throw new InvalidOperationException();
         Success = success;
-        Error = error;
+        _errors = error;
     }
 
     public bool Success { get; }
-    public string Error { get; }
+    public IReadOnlyList<Error> Errors => _errors;
     public bool IsFailure => !Success;
 
-    public static Result Fail(string message)
+    public static Result AddError(List<Error> errors)
     {
-        return new Result(false, message);
+        return new Result(false, errors);
     }
 
-    public static Result<T> Fail<T>(string message, T defaultValue)
+    public static Result<T> AddErrors<T>(List<Error> errors, T defaultValue)
     {
-        return new Result<T>(defaultValue, false, message);
+        return new Result<T>(defaultValue,false, errors);
+    }
+
+    public static Result Fail(string description)
+    {
+        return new Result(false, new List<Error> { new Error(description) });
+    }
+
+    public static Result<T> Fail<T>(string description, T defaultValue)
+    {
+        return new Result<T>(defaultValue, false, new List<Error> { new Error(description) });
     }
 
     public static Result Ok()
     {
-        return new Result(true, string.Empty);
+        return new Result(true, new List<Error>());
     }
 
     public static Result<T> Ok<T>(T value)
     {
-        return new Result<T>(value, true, string.Empty);
+        return new Result<T>(value, true, new List<Error>());
     }
 }
 
 public class Result<T> : Result
 {
-    protected internal Result(T value, bool success, string error)
+    protected internal Result(T value, bool success, List<Error> error)
         : base(success, error)
     {
         Value = value;

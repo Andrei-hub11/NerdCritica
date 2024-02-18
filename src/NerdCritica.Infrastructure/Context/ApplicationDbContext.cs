@@ -2,11 +2,10 @@
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using NerdCritica.Domain.Entities;
-using System;
 
 namespace NerdCritica.Infrastructure.Context;
 
+//apenas para obter tabelas do Asp.Net Identity
 public class ApplicationDbContext: IdentityDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -18,7 +17,6 @@ public class ApplicationDbContext: IdentityDbContext
     {
         base.OnModelCreating(builder);
 
-        // Aqui você pode adicionar configurações personalizadas do Identity
         // Exemplo: builder.Entity<IdentityUser>().ToTable("Usuarios");
     }
 }

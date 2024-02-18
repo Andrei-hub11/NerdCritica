@@ -23,4 +23,8 @@
     <ProjectReference Include="..\NerdCritica.Infrastructure\NerdCritica.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

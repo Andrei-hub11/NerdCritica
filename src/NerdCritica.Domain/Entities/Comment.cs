@@ -1,4 +1,5 @@
-﻿
+﻿using NerdCritica.Domain.Utils;
+
 namespace NerdCritica.Domain.Entities;
 
 public class Comment
@@ -16,13 +17,66 @@ public class Comment
         Content = content;
     }
 
-    public static Comment Create(Guid commentId, Guid ratingId, string userId, string content)
+    public static Result<Comment> Create(Guid commentId, Guid ratingId, string userId, string content)
     {
-        return new Comment(commentId, ratingId, userId, content);
+        var isCreate = true;
+        var result = CommentValidation(content, isCreate, ratingId, userId);
+
+        if (result.Count > 0)
+        {
+            var emptyComment = new Comment(Guid.Empty, Guid.Empty, string.Empty,
+                string.Empty);
+            return Result.AddErrors(result, emptyComment);
+        }
+
+        var comment = new Comment(commentId, ratingId, userId, content);
+
+        return Result.Ok(comment);
     }
 
-    public static void Update(Comment comment, string newContent)
+    public static Result<Comment> Update(Comment comment, string content)
     {
-        comment.Content = newContent;
+        var isCreate = false;
+        var result = CommentValidation(content, isCreate);
+
+        if (result.Count > 0)
+        {
+            var emptyComment = new Comment(Guid.Empty, Guid.Empty, string.Empty,
+                string.Empty);
+            return Result.AddErrors(result, emptyComment);
+        }
+
+        comment.Content = content;
+
+        return Result.Ok(comment);
+    }
+
+    private static List<Error> CommentValidation(string comment, bool isCreate, 
+        Guid? ratingId = null, string identityUserId = "")
+    {
+        var errors = new List<Error>();
+
+        if (string.IsNullOrWhiteSpace(comment))
+        {
+            errors.Add(new Error("O comentário do post não pode estar vazio"));
+        }
+
+        if (isCreate && ratingId == Guid.Empty)
+        {
+            errors.Add(new Error("O id da avaliação precisa ser fornecido."));
+        }
+
+        if (isCreate && string.IsNullOrWhiteSpace(identityUserId))
+        {
+            errors.Add(new Error("O id do usuário não pode estar vazio"));
+        }
+
+        if (isCreate && !string.IsNullOrEmpty(identityUserId) &&
+            !Guid.TryParse(identityUserId, out Guid result))
+        {
+            errors.Add(new Error($"{identityUserId} não é um id válido."));
+        }
+
+        return errors;
     }
 }
