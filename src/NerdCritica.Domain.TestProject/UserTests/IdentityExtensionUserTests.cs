@@ -5,69 +5,56 @@ namespace NerdCritica.Domain.TestProject.UserTests;
 
 public class IdentityExtensionUserTests
 {
-    [Fact(DisplayName = "Create should return success result with valid data")]
-    public void Create_WithValidData_ShouldReturnSuccessResult()
-    {
-        var identityUserId = Guid.NewGuid().ToString();
-        var profileImage = new byte[1024]; // Imagem válida
-        var profileImagePath = "path/to/profile.jpg";
+    public static readonly List<string> ValidRoles = new List<string> { "ah" };
 
-        var result = User.Create(identityUserId, profileImage, profileImagePath);
+
+    [Theory(DisplayName = "Create should return success result with valid data")]
+    [InlineData("Andy", "example@example.com", "Strong^Password1^", "profile.jpg", new string[] {"Moderator"})]
+    [InlineData("Andy", "example@example.com", "Strong^Password1*", "profile.jpg", new string[] {"User"})]
+    [InlineData("Andy", "example@example.com", "Strong!Password1^", "profile.jpg", new string[] {"Admin"})]
+    [InlineData("Andy", "example@example.com", "StrongPassword1##", "profile.jpg", new string[] {"Admin"})]
+    public void Create_WithValidData_ShouldReturnSuccessResult(string userName, string email, string password,
+        string profileImagePath, string[] roles)
+    {
+        var profileImage = new byte[1];
+
+        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage, 
+            profileImagePath, roles.ToList());
 
         Assert.True(result.Success);
         Assert.NotNull(result.Value);
-        Assert.Equal(identityUserId, result.Value.IdentityUserId);
-        Assert.Equal(profileImage, result.Value.ProfileImage);
+        Assert.Equal(email, result.Value.Email);
         Assert.Equal(profileImagePath, result.Value.ProfileImagePath);
+        Assert.Equal(profileImage, result.Value.ProfileImage);
+        Assert.NotEqual(DateTime.MinValue, result.Value.LastAccessDate);
     }
 
-    [Fact(DisplayName = "Create should return failure result with invalid data")]
-    public void Create_WithInvalidData_ShouldReturnFailureResult()
+    [Theory(DisplayName = "Create should return failure result with invalid data")]
+    [MemberData(nameof(GetInvalidUserTestData))]
+    public void Create_WithInvalidData_ShouldReturnFailureResult(string userName, string email, string password,
+        byte[] profileImage, string profileImagePath, string expectedErrorMessage, string[] roles)
     {
-        var identityUserId = Guid.NewGuid().ToString();
-        var invalidProfileImage = new byte[3 * 1024 * 1024]; // Imagem inválida (maior que 2MB)
-        var profileImagePath = "path/to/profile.jpg";
-
-        var result = User.Create(identityUserId, invalidProfileImage, profileImagePath);
+        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage, profileImagePath,
+            roles.ToList());
 
         Assert.False(result.Success);
-        Assert.Empty(result.Value.ProfileImage); 
-        Assert.NotEmpty(result.Errors); 
-        Assert.Contains("A imagem não pode ter mais que dois 2 megabytes de tamanho.", 
-            result.Errors.Select(e => e.Description));
-    }
-
-    [Fact(DisplayName = "Create should return failure result with empty identityUserId")]
-    public void Create_WithEmptyIdentityUserId_ShouldReturnFailureResult()
-    {
-        var identityUserId = ""; 
-        var profileImage = new byte[1024]; 
-        var profileImagePath = "path/to/profile.jpg";
-
-        var result = User.Create(identityUserId, profileImage, profileImagePath);
-
-        Assert.False(result.Success);
-        Assert.Empty(result.Value.ProfileImage);
-        Assert.NotNull(result.Errors);
+        Assert.Empty(result.Value.Email);
         Assert.NotEmpty(result.Errors);
-        Assert.Contains("O id do usuário não pode estar vazio", 
-            result.Errors.Select(e => e.Description));
+        Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }
 
-    [Fact(DisplayName = "Create should return failure result with invalid identityUserId")]
-    public void Create_WithInvalidIdentityUserId_ShouldReturnFailureResult()
+    public static IEnumerable<object[]> GetInvalidUserTestData()
     {
-        var invalidIdentityUserId = "invalidUserId"; 
-        var profileImage = new byte[1024]; 
-        var profileImagePath = "path/to/profile.jpg";
-
-        var result = User.Create(invalidIdentityUserId, profileImage, profileImagePath);
-
-        Assert.False(result.Success);
-        Assert.Empty(result.Value.ProfileImage); 
-        Assert.NotNull(result.Errors);
-        Assert.NotEmpty(result.Errors); 
-        Assert.Contains($"{invalidIdentityUserId} não é um id válido.", 
-            result.Errors.Select(e => e.Description));
+        yield return new object[] {"Andy", "", "StrongPassword1", new byte[1], "profile.jpg", "O email é obrigatório.", new string[] {"Moderator" } };
+        yield return new object[] {"Andy", "invalidemail", "StrongPassword1", new byte[1], "profile.jpg", "Email inválido.", new string[] { "Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "", new byte[1], "profile.jpg", "A senha é obrigatória.", new string[] { "Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "weak", new byte[1], "profile.jpg", "A senha deve ter pelo menos oito caracteres.",
+        new string[] {"Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "WeakPassword", new byte[1], "profile.jpg", "Senha inválida. A senha deve ter pelo menos dois caracteres especiais.",
+        new string[] {"Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[2 * 1024 * 1024 + 1], "profile.jpg", "A imagem não pode ter mais que dois 2 megabytes de tamanho.",
+        new string[] {"Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[1], "profile.jpg", "O role fornecido não é válido.",
+        new string[] {"InvalidRole" } };
     }
 }
