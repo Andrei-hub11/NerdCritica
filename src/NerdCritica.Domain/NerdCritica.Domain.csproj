@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Entities\Aggregates\" />
     <Folder Include="Persistence\" />
-    <Folder Include="Repositories\User\" />
   </ItemGroup>
 
   <ItemGroup>

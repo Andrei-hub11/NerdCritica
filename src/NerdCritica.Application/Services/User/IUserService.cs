@@ -7,5 +7,7 @@ public interface IUserService
 {
     Task<ProfileUserResponseDTO> GetUserByIdAsync(string userId, CancellationToken cancellationToken);
     Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
+    Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO, 
+        string pathImage, CancellationToken cancellationToken);
     Task<ProfileUserResponseDTO> UpdateUserAsync(ProfileUserResponseDTO userDTO, CancellationToken cancellationToken);
 }

@@ -36,6 +36,8 @@ public static class IdentityOptionsExtensions
         {
             options.Password.RequiredLength = 8;
             options.Password.RequiredUniqueChars = 2;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireDigit = false;
 
             // User settings.
             options.User.AllowedUserNameCharacters =
