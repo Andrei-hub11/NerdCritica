@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NerdCritica.Domain.TestProject.UserTests;
+namespace NerdCritica.TestProject.Domain.UserTests;
 
 public class WishlistTests
 {
@@ -64,7 +64,7 @@ public class WishlistTests
     public void Update_WithInvalidData_ShouldReturnFailureResult(string invalidWishListName, string expectedErrorMessage)
     {
         var moviePostId = Guid.NewGuid();
-        var identityUserId = Guid.NewGuid().ToString(); 
+        var identityUserId = Guid.NewGuid().ToString();
         var wishListName = "My Wishlist";
         var wishlist = Wishlist.Create(moviePostId, identityUserId, wishListName);
 

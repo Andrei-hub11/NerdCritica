@@ -1,7 +1,6 @@
-﻿
-using NerdCritica.Domain.Entities;
+﻿using NerdCritica.Domain.Entities;
 
-namespace NerdCritica.Domain.TestProject.UserTests;
+namespace NerdCritica.TestProject.Domain.UserTests;
 
 public class IdentityExtensionUserTests
 {
@@ -9,16 +8,16 @@ public class IdentityExtensionUserTests
 
 
     [Theory(DisplayName = "Create should return success result with valid data")]
-    [InlineData("Andy", "example@example.com", "Strong^Password1^", "profile.jpg", new string[] {"Moderator"})]
-    [InlineData("Andy", "example@example.com", "Strong^Password1*", "profile.jpg", new string[] {"User"})]
-    [InlineData("Andy", "example@example.com", "Strong!Password1^", "profile.jpg", new string[] {"Admin"})]
-    [InlineData("Andy", "example@example.com", "StrongPassword1##", "profile.jpg", new string[] {"Admin"})]
+    [InlineData("Andy", "example@example.com", "Strong^Password1^", "profile.jpg", new string[] { "Moderator" })]
+    [InlineData("Andy", "example@example.com", "Strong^Password1*", "profile.jpg", new string[] { "User" })]
+    [InlineData("Andy", "example@example.com", "Strong!Password1^", "profile.jpg", new string[] { "Admin" })]
+    [InlineData("Andy", "example@example.com", "StrongPassword1##", "profile.jpg", new string[] { "Admin" })]
     public void Create_WithValidData_ShouldReturnSuccessResult(string userName, string email, string password,
         string profileImagePath, string[] roles)
     {
         var profileImage = new byte[1];
 
-        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage, 
+        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage,
             profileImagePath, roles.ToList());
 
         Assert.True(result.Success);
@@ -45,9 +44,9 @@ public class IdentityExtensionUserTests
 
     public static IEnumerable<object[]> GetInvalidUserTestData()
     {
-        yield return new object[] {"Andy", "", "StrongPassword1", new byte[1], "profile.jpg", "O email é obrigatório.", new string[] {"Moderator" } };
-        yield return new object[] {"Andy", "invalidemail", "StrongPassword1", new byte[1], "profile.jpg", "Email inválido.", new string[] { "Moderator" } };
-        yield return new object[] {"Andy", "example@example.com", "", new byte[1], "profile.jpg", "A senha é obrigatória.", new string[] { "Moderator" } };
+        yield return new object[] { "Andy", "", "StrongPassword1", new byte[1], "profile.jpg", "O email é obrigatório.", new string[] { "Moderator" } };
+        yield return new object[] { "Andy", "invalidemail", "StrongPassword1", new byte[1], "profile.jpg", "Email inválido.", new string[] { "Moderator" } };
+        yield return new object[] { "Andy", "example@example.com", "", new byte[1], "profile.jpg", "A senha é obrigatória.", new string[] { "Moderator" } };
         yield return new object[] {"Andy", "example@example.com", "weak", new byte[1], "profile.jpg", "A senha deve ter pelo menos oito caracteres.",
         new string[] {"Moderator" } };
         yield return new object[] {"Andy", "example@example.com", "WeakPassword", new byte[1], "profile.jpg", "Senha inválida. A senha deve ter pelo menos dois caracteres especiais.",

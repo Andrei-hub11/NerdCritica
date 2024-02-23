@@ -1,6 +1,6 @@
 ﻿using NerdCritica.Domain.Entities;
 
-namespace NerdCritica.Domain.TestProject.MovieTests;
+namespace NerdCritica.TestProject.Domain.MovieTests;
 
 public class MoviePostTests
 {

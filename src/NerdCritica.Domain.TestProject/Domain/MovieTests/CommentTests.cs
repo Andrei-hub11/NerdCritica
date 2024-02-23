@@ -1,6 +1,6 @@
 ﻿using NerdCritica.Domain.Entities;
 
-namespace NerdCritica.Domain.TestProject.MovieTests;
+namespace NerdCritica.TestProject.Domain.MovieTests;
 
 public class CommentTests
 {
@@ -27,15 +27,15 @@ public class CommentTests
     {
         var commentId = Guid.NewGuid();
         var ratingId = Guid.NewGuid();
-        var identityUserId = Guid.NewGuid().ToString(); 
+        var identityUserId = Guid.NewGuid().ToString();
         var invalidContent = "";
 
         var result = Comment.Create(commentId, ratingId, identityUserId, invalidContent);
 
         Assert.False(result.Success);
-        Assert.Empty(result.Value.Content); 
-        Assert.NotEmpty(result.Errors); 
-        Assert.Contains("O comentário do post não pode estar vazio", 
+        Assert.Empty(result.Value.Content);
+        Assert.NotEmpty(result.Errors);
+        Assert.Contains("O comentário do post não pode estar vazio",
             result.Errors.Select(e => e.Description));
     }
 
@@ -44,7 +44,7 @@ public class CommentTests
     {
         var commentId = Guid.NewGuid();
         var ratingId = Guid.NewGuid();
-        var identityUserId = Guid.NewGuid().ToString(); 
+        var identityUserId = Guid.NewGuid().ToString();
         var content = "This is a valid comment.";
         var comment = Comment.Create(commentId, ratingId, identityUserId, content);
 
@@ -52,9 +52,9 @@ public class CommentTests
         var result = Comment.Update(comment.Value, updatedContent);
 
         Assert.True(result.Success);
-        Assert.Equal(commentId, result.Value.CommentId); 
-        Assert.Equal(ratingId, result.Value.RatingId); 
-        Assert.Equal(identityUserId, result.Value.IdentityUserId); 
+        Assert.Equal(commentId, result.Value.CommentId);
+        Assert.Equal(ratingId, result.Value.RatingId);
+        Assert.Equal(identityUserId, result.Value.IdentityUserId);
         Assert.Equal(updatedContent, result.Value.Content);
     }
 
@@ -62,7 +62,7 @@ public class CommentTests
     [InlineData("", "O comentário do post não pode estar vazio")]
     [InlineData(null, "O comentário do post não pode estar vazio")]
     [InlineData(" ", "O comentário do post não pode estar vazio")]
-    public void Update_WithInvalidData_ShouldReturnFailureResult(string invalidContent, 
+    public void Update_WithInvalidData_ShouldReturnFailureResult(string invalidContent,
         string expectedErrorMessage)
     {
         var commentId = Guid.NewGuid();
