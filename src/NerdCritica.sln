@@ -7,11 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.Application", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.Domain", "NerdCritica.Domain\NerdCritica.Domain.csproj", "{52EEA362-229E-4B53-9652-B4BD7A9B9B7E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.Domain.TestProject", "NerdCritica.Domain.TestProject\NerdCritica.Domain.TestProject.csproj", "{2DA3E8FD-C985-473C-9089-C2080227D304}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.TestProject", "NerdCritica.Domain.TestProject\NerdCritica.TestProject.csproj", "{2DA3E8FD-C985-473C-9089-C2080227D304}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.Infrastructure", "NerdCritica.Infrastructure\NerdCritica.Infrastructure.csproj", "{5A43ED5D-A72C-4354-BE16-C62CA7A7999A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NerdCritica.Api", "NerdCritica.Api\NerdCritica.Api.csproj", "{048CDC23-2D6A-41E0-868D-C11CF6FC2A5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NerdCritica.Api", "NerdCritica.Api\NerdCritica.Api.csproj", "{048CDC23-2D6A-41E0-868D-C11CF6FC2A5B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NerdCriticaTests", "NerdCriticaTests", "{08E59FC7-CE9B-4662-B13E-CC277EC550EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +44,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2DA3E8FD-C985-473C-9089-C2080227D304} = {08E59FC7-CE9B-4662-B13E-CC277EC550EA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {47B80B6B-3845-4933-B082-B23F049E1E5F}

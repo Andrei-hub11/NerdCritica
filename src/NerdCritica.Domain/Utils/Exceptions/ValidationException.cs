@@ -2,11 +2,14 @@
 
 public class ValidationException: Exception
 {
-    public object Erros { get; }
+    public List<string> Errors { get; } = new List<string>();
 
-    public ValidationException(string message, object erros) : base(message)
+    public ValidationException(string message) : base(message)
     {
-        Erros = erros;
     }
 
+    public ValidationException(string message, List<string> erros) : base(message)
+    {
+        Errors = erros;
+    }
 }

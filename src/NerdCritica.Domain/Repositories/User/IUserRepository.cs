@@ -10,7 +10,10 @@ namespace NerdCritica.Domain.Repositories.User;
 public interface IUserRepository
 {
     Task<Result<UserMapping>> GetUserByIdAsync(string userId, CancellationToken cancellationToken);
+    Task<Result<UserMapping>> GetUserByEmailAsync(string userEmail, CancellationToken cancellationToken);
+    Task<Result<string>> GetUserRoleAsync(string userId, CancellationToken cancellationToken);
     Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
     Task<Result<UserCreationTokenAndId>> CreateUserAsync(ExtensionUserIdentity createUserRequestDTO);
-    Task<ProfileUserResponseDTO> UpdateUserAsync(ProfileUserResponseDTO userDTO, CancellationToken cancellationToken);
+    Task<Result<UserLogin>> LoginUserAsync(UserLoginRequestDTO userLogin, CancellationToken cancellationToken);
+    Task<Result<bool>> UpdateUserAsync(ExtensionUserIdentity userDTO, string userId, CancellationToken cancellationToken);
 }

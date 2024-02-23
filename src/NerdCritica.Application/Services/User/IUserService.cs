@@ -9,5 +9,7 @@ public interface IUserService
     Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
     Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO, 
         string pathImage, CancellationToken cancellationToken);
-    Task<ProfileUserResponseDTO> UpdateUserAsync(ProfileUserResponseDTO userDTO, CancellationToken cancellationToken);
+    Task<AuthOperationResponseDTO> LoginUserAsync(UserLoginRequestDTO user, CancellationToken cancellationToken);
+    Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, string pathProfileImage,
+        CancellationToken cancellationToken);
 }

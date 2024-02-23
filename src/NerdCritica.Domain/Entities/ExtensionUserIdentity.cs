@@ -7,6 +7,7 @@ namespace NerdCritica.Domain.Entities;
 
 public class ExtensionUserIdentity
 {
+    public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; }
     public string Email { get; private set; } = string.Empty;
     public string Password { get; private set; } = string.Empty;
@@ -26,10 +27,19 @@ public class ExtensionUserIdentity
         Roles = roles;
     }
 
+    private ExtensionUserIdentity(string userName, string email, string profileImagePath, byte[] profileImage)
+    {
+        UserName = userName;
+        Email = email;
+        ProfileImagePath = profileImagePath;
+        ProfileImage = profileImage;
+    }
+
     public static Result<ExtensionUserIdentity> Create(string userName, string email, string password, byte[] profileImage, 
         string profileImagePath, List<string> roles)
     {
-        var result = UserValidation(userName, email, password, roles, profileImage);
+        var isCreate = true;
+        var result = UserValidation(userName, email, profileImage, isCreate, password, roles);
 
         if (result.Count > 0)
         {
@@ -44,8 +54,24 @@ public class ExtensionUserIdentity
         return Result.Ok(user);
     }
 
-    private static List<Error> UserValidation(string userName, string email, string password, List<string> roles,
-        byte[] imageProfile)
+    public static Result<ExtensionUserIdentity> From(string userName, 
+        string email, byte[] profileImage,
+     string profileImagePath)
+    {
+        var isCreate = false;
+        var result = UserValidation(userName, email, profileImage, isCreate);
+
+        if (result.Count > 0)
+        {
+            var emptyUser = new ExtensionUserIdentity(string.Empty, string.Empty, string.Empty,
+                string.Empty, new byte[0], new List<string>());
+            return Result.AddErrors(result, emptyUser);
+        }
+
+        return Result.Ok(new ExtensionUserIdentity(userName, email, profileImagePath, profileImage));
+    }
+        private static List<Error> UserValidation(string userName, string email,
+        byte[] imageProfile, bool isCreate, string? password = null, List<string>? roles = null)
     {
         var errors = new List<Error>();
 
@@ -64,17 +90,17 @@ public class ExtensionUserIdentity
             errors.Add(new Error("Email inválido."));
         }
 
-        if (string.IsNullOrWhiteSpace(password))
+        if (isCreate && string.IsNullOrWhiteSpace(password))
         {
             errors.Add(new Error("A senha é obrigatória."));
         }
 
-        if (password.Length < 8)
+        if (isCreate && password != null && password.Length < 8)
         {
             errors.Add(new Error("A senha deve ter pelo menos oito caracteres."));
         }
 
-        if (!Regex.IsMatch(password,
+        if (isCreate && password != null && !Regex.IsMatch(password,
             @"(?:.*[!@#$%^&*]){2,}"))
         {
             errors.Add(new Error("Senha inválida. A senha deve ter pelo menos dois caracteres especiais."));
@@ -85,7 +111,8 @@ public class ExtensionUserIdentity
             errors.Add(new Error("A imagem não pode ter mais que dois 2 megabytes de tamanho."));
         }
 
-        if (!roles.Contains("User") && !roles.Contains("Moderator") && !roles.Contains("Admin"))
+        if (isCreate && roles != null && !roles.Contains("User") && 
+                !roles.Contains("Moderator") && !roles.Contains("Admin"))
         {
             errors.Add(new Error("O role fornecido não é válido."));
         }

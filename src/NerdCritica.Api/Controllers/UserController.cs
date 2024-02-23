@@ -1,24 +1,20 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.DTOs.User;
-using NerdCritica.Domain.Utils;
-using NerdCritica.Domain.Utils.Exceptions;
 using System.Security.Claims;
 
 namespace NerdCritica.Api.Controllers;
 
-[Route("api/v1")]
+[Route("api/v1/account")]
 [ApiController]
 public class UserController : ControllerBase
 {
-    private readonly IWebHostEnvironment _hostingEnvironment;
     private readonly UserService _userService;
 
-    public UserController(IWebHostEnvironment hostingEnvironment, UserService userService)
+    public UserController(UserService userService)
     {
-        _hostingEnvironment = hostingEnvironment;
         _userService = userService;
     }
 
@@ -30,7 +26,7 @@ public class UserController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-          throw new UnauthorizedAccessException();
+            throw new UnauthorizedAccessException();
         }
 
         var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
@@ -41,18 +37,63 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] CreateUserRequestDTO user, 
+    public async Task<IActionResult> Register([FromBody] CreateUserRequestDTO user,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(user.ProfileImage ?? new byte[0]);
+        var resultDTO = await _userService.CreateUserAsync(user, pathProfileImage, cancellationToken);
+
+        return Ok(new
+        {
+            Message = "Registro bem sucedido. Seja bem-vindo",
+            resultDTO.User,
+            resultDTO.Token,
+            resultDTO.Role
+        });
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] UserLoginRequestDTO user,
+        CancellationToken cancellationToken)
     {
-        return BadRequest(ModelState);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var resultDTO = await _userService.LoginUserAsync(user, cancellationToken);
+
+        return Ok(new
+        {
+            resultDTO.User,
+            resultDTO.Token,
+            resultDTO.Role
+        });
     }
 
-       var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(user.ProfileImage ?? new byte[0]);
-       var resultDTO = await _userService.CreateUserAsync(user, pathProfileImage, cancellationToken);
+    [Authorize]
+    [HttpPut("update/{userId}")]
+    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestDTO user, string userId,
+      CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+        
+        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(user.ProfileImage ?? new byte[0]);
+        var resultDTO = await _userService.UpdateUserAsync(user, userId, pathProfileImage, cancellationToken);
 
-       return Ok(new { Message = "Registro bem sucedido. Seja bem-vindo", 
-           User = resultDTO.user, Token = resultDTO.token});
+        return Ok(new
+        {
+            Message = "A atualização foi bem-sucedida.",
+            User = resultDTO
+        });
     }
+
 }

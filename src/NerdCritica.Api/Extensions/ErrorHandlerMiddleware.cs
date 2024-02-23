@@ -42,8 +42,8 @@ public class ErrorHandlerMiddleware
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 400));
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+       "o manipulador de erros não será executado.");
                 throw;
             }
             await  _exceptionHandler.HandleValidationException(context, ex);
@@ -53,8 +53,8 @@ public class ErrorHandlerMiddleware
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 404));
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+          "o manipulador de erros não será executado.");
                 throw;
             }
             await _exceptionHandler.HandleNotFoundException(context, ex);
@@ -65,8 +65,8 @@ public class ErrorHandlerMiddleware
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 400));
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+      "o manipulador de erros não será executado.");
                 throw;
             }
             await _exceptionHandler.HandleBadRequestException(context, ex);
@@ -75,8 +75,8 @@ public class ErrorHandlerMiddleware
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 409));
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+      "o manipulador de erros não será executado.");
                 throw;
             }
             await _exceptionHandler.HandleCreateUserException(context, ex);
@@ -86,8 +86,8 @@ public class ErrorHandlerMiddleware
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 401));
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+      "o manipulador de erros não será executado.");
                 throw;
             }
             await _exceptionHandler.HandleUnauthorizedAccessException(context, ex);
@@ -98,8 +98,8 @@ public class ErrorHandlerMiddleware
 
             if (context.Response.HasStarted)
             {
-                _logger.LogWarning("The response has already started, " +
-                    "the error handler will not be executed.");
+                _logger.LogWarning("A resposta já foi iniciada, " +
+       "o manipulador de erros não será executado.");
                 throw;
             }
             await _exceptionHandler.HandleGeneralException(context, ex);

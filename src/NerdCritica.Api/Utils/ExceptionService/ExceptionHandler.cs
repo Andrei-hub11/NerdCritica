@@ -30,7 +30,7 @@ public class ExceptionHandler : IExceptionHandler
             {
                 Error = ex,
             };
-            context.Features.Set((IErrorHandlerFeature?)errorHandlerFeature);
+            context.Features.Set((ErrorHandlerFeature?)errorHandlerFeature);
             context.Response.StatusCode = 500;
             context.Response.Headers.Clear();
 
@@ -58,18 +58,33 @@ public class ExceptionHandler : IExceptionHandler
 
         try
         {
-            var responseMessage = JsonConvert.SerializeObject(new
-            {
-                message = ex.Message,
-                errors = ex.Erros
-            });
+            string responseMessage;
 
+            if (ex.Errors != null && ex.Errors.Any())
+            {
+                var responseObject = new
+                {
+                    ex.Message,
+                    ex.Errors
+                };
+
+                responseMessage = JsonConvert.SerializeObject(responseObject);
+            }
+            else
+            {
+                var responseObject = new
+                {
+                    ex.Message
+                };
+
+                responseMessage = JsonConvert.SerializeObject(responseObject);
+            }
 
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             context.Response.ContentType = "application/json";
 
-         await context.Response.WriteAsync(responseMessage);
-          await _options.ErrorHandler(context);
+            await context.Response.WriteAsync(responseMessage);
+            await _options.ErrorHandler(context);
             return;
         }
         catch (Exception ex2)
@@ -95,7 +110,7 @@ public class ExceptionHandler : IExceptionHandler
         {
             var responseMessage = JsonConvert.SerializeObject(new
             {
-                message = ex.Message,
+                ex.Message,
             });
 
 
@@ -128,7 +143,7 @@ public class ExceptionHandler : IExceptionHandler
         {
             var responseMessage = JsonConvert.SerializeObject(new
             {
-                message = ex.Message,
+                ex.Message,
             });
 
             context.Response.StatusCode = StatusCodes.Status409Conflict;
@@ -193,7 +208,12 @@ public class ExceptionHandler : IExceptionHandler
         {
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             context.Response.ContentType = "application/json";
-           
+            var responseMessage = JsonConvert.SerializeObject(new
+            {
+                ex.Message,
+            });
+
+            await context.Response.WriteAsync(responseMessage);
             await _options.ErrorHandler(context);
             return;
         }
@@ -207,5 +227,5 @@ public class ExceptionHandler : IExceptionHandler
         }
     }
 
-   
+
 }
