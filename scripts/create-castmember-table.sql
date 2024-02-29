@@ -1,0 +1,12 @@
+CREATE TABLE CastMember (
+    CastMemberId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+	MoviePostId UNIQUEIDENTIFIER NOT NULL,
+    MemberName NVARCHAR(100) NOT NULL,
+    CharacterName NVARCHAR(100) NOT NULL,
+    MemberImage VARBINARY(MAX) NOT NULL,
+    MemberImagePath NVARCHAR(255) NOT NULL,
+    RoleInMovie NVARCHAR(100) NOT NULL,
+    RoleType INT NOT NULL
+	CONSTRAINT FK_CastMember_MoviePost FOREIGN KEY (MoviePostId) REFERENCES dbo.MoviePost(MoviePostId),
+	CONSTRAINT Check_RoleType CHECK (RoleType IN (1, 2, 3, 4, 5, 6, 7, 8, 9))
+);

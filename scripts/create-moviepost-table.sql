@@ -1,11 +1,18 @@
 CREATE TABLE MoviePost (
     MoviePostId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     CreatorUserId NVARCHAR(450) NOT NULL,
-	MoviePostTitle NVARCHAR(150) NOT NULL,
-    MoviePostImage VARBINARY(MAX) NOT NULL,
-	MoviePostImagePath NVARCHAR(MAX) NOT NULL,
-	MoviePostDescription NVARCHAR(MAX) NOT NULL,
+	MovieTitle NVARCHAR(150) NOT NULL,
+    MovieImage VARBINARY(MAX) NOT NULL,
+	MovieBackdropImage VARBINARY(MAX) NOT NULL DEFAULT 0x,
+	MovieImagePath NVARCHAR(MAX) NOT NULL,
+	MovieBackdropImagePath NVARCHAR(MAX) NOT NULL DEFAULT '',
+	MovieDescription NVARCHAR(MAX) NOT NULL,
+	Director NVARCHAR(150) NOT NULL,
 	MovieCategory NVARCHAR(MAX) NOT NULL,
+	ReleaseDate DATETIME NOT NULL,
+	Runtime INT NOT NULL,
+	CreatedAt DATETIME DEFAULT GETDATE() NOT NULL,
+	UpdatedAt DATETIME DEFAULT GETDATE() NOT NULL
 	CONSTRAINT FK_MoviePost_CreatorUser FOREIGN KEY (CreatorUserId) REFERENCES dbo.AspNetUsers(Id),
-	CONSTRAINT Check_MinimumLength CHECK (LEN(MoviePostDescription) >= 150)
+	CONSTRAINT Check_MinimumLength CHECK (LEN(MovieDescription) >= 150)
 );
