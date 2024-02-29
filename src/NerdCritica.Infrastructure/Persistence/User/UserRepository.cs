@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Client;
 using NerdCritica.Domain.DTOs.MappingsDapper;
 using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.DTOs.User;
@@ -9,12 +8,8 @@ using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
-using NerdCritica.Domain.Utils.Exceptions;
 using NerdCritica.Infrastructure.Context;
 using NerdCritica.Infrastructure.Extensions;
-using NerdCritica.Infrastructure.Persistence.Application;
-using System.Data;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace NerdCritica.Infrastructure.Persistence.User;
 

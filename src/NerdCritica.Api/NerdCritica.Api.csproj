@@ -30,7 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\movies\cast\" />
+    <Folder Include="wwwroot\movies\backdrops\" />
+    <Folder Include="wwwroot\users\images\" />
   </ItemGroup>
 
 </Project>

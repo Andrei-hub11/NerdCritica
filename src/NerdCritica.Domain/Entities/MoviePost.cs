@@ -1,85 +1,125 @@
 ﻿using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace NerdCritica.Domain.Entities;
 
 public class MoviePost
 {
   public Guid MoviePostId { get; private set; }
-  public string CreatorUserId { get; private set; }
-  public string MoviePostImagePath { get; private set; } = string.Empty;
-  public byte[] MoviePostImage { get; private set; } = new byte[0];
-  public string MoviePostTitle { get; private set; } = string.Empty;
-  public string MoviePostDescription { get; private set; } = string.Empty;
-  public string Category { get; private set; } = string.Empty;
+  public string CreatorUserId { get; private set; } = string.Empty;
+  public string MovieImagePath { get; private set; } = string.Empty;
+  public string MovieBackdropImagePath { get; private set; } = string.Empty;
+  public byte[] MovieImage { get; private set; } = new byte[0];
+  public byte[] MovieBackdropImage { get; private set; } = new byte[0];
+  public string MovieTitle { get; private set; } = string.Empty;
+  public string MovieDescription { get; private set; } = string.Empty;
+  public string MovieCategory { get; private set; } = string.Empty;
+  public string Director { get; private set; } = string.Empty; 
+  public DateTime ReleaseDate { get; private set; }
+  public TimeSpan Runtime { get; private set; }
 
 
-    private MoviePost(Guid moviePostId, string creatorUserId, string profileImagePath, byte[] profileImage,
-        string moviePostTitle, string moviePostDescription, string category)
+    private MoviePost(string creatorUserId,
+                      string movieImagePath,
+                      string movieBackdropImagePath,
+                      byte[] movieImage,
+                      byte[] movieBackdropImage,
+                      string movieTitle,
+                      string movieDescription,
+                      string movieCategory,
+                      string director,
+                      DateTime releaseData,
+                      TimeSpan runtime)
     {
-        MoviePostId = moviePostId;
         CreatorUserId = creatorUserId;
-        MoviePostImagePath = profileImagePath;
-        MoviePostImage = profileImage;
-        MoviePostTitle = moviePostTitle;
-        MoviePostDescription = moviePostDescription;
-        Category = category;
+        MovieImagePath = movieImagePath;
+        MovieBackdropImagePath = movieBackdropImagePath;
+        MovieImage = movieImage;
+        MovieBackdropImage = movieBackdropImage;
+        MovieTitle = movieTitle;
+        MovieDescription = movieDescription;
+        MovieCategory = movieCategory;
+        Director = director;
+        ReleaseDate = releaseData;
+        Runtime = runtime;
     }
 
-    public static Result<MoviePost> Create(Guid moviePostId, string creatorUserId, string moviePostImagePath, byte[] moviePostImage,
-        string moviePostTitle, string moviePostDescription, string category)
+    private MoviePost(
+                      string movieImagePath,
+                      string movieBackdropImagePath,
+                      byte[] movieImage,
+                      byte[] movieBackdropImage,
+                      string movieTitle,
+                      string movieDescription,
+                      string movieCategory,
+                      string director,
+                      DateTime releaseData,
+                      TimeSpan runtime)
+    {
+        MovieImagePath = movieImagePath;
+        MovieBackdropImagePath = movieBackdropImagePath;
+        MovieImage = movieImage;
+        MovieBackdropImage = movieBackdropImage;
+        MovieTitle = movieTitle;
+        MovieDescription = movieDescription;
+        MovieCategory = movieCategory;
+        Director = director;
+        ReleaseDate = releaseData;
+        Runtime = runtime;
+    }
+
+    public static Result<MoviePost> Create(string creatorUserId, string movieImagePath, string movieBackdropPath,
+        byte[] movieImage, byte[] movieBackdropImage,
+        string movieTitle, string movieDescription, string category, string director, DateTime releaseDate,
+        TimeSpan runtime)
     {
         var isCreate = true;
-        var result = MoviePostValidation(moviePostImage, moviePostTitle, moviePostDescription, 
-            category, isCreate, creatorUserId);
+        var result = MoviePostValidation(movieImagePath, movieBackdropPath, movieImage, movieBackdropImage, 
+            movieTitle, movieDescription, category, director, isCreate, creatorUserId);
 
         if (result.Count > 0)
         {
-            // Retorna um Result<MoviePost> com os erros, sem a necessidade de cast
-            var emptyMoviePost = new MoviePost(Guid.Empty, string.Empty, string.Empty, 
-                new byte[0], string.Empty, string.Empty, string.Empty);
+            var emptyMoviePost = new MoviePost(string.Empty, string.Empty, string.Empty, new byte[0],
+                new byte[0], string.Empty, string.Empty, string.Empty, string.Empty, DateTime.Now, 
+                TimeSpan.Zero);
             return Result.AddErrors(result, emptyMoviePost);
         }
 
-        var moviePost = new MoviePost(moviePostId, creatorUserId, moviePostImagePath, moviePostImage,
-            moviePostTitle, moviePostDescription, category);
+        var moviePost = new MoviePost(creatorUserId, movieImagePath, movieBackdropPath, movieImage,
+            movieBackdropImage, movieTitle, movieDescription, category, director, releaseDate, runtime);
 
         return Result.Ok(moviePost);
     }
 
-    public static Result<MoviePost> Update(MoviePost moviePost, byte[] moviePostImage,
-        string moviePostTitle, string moviePostDescription, string category)
+    public static Result<MoviePost> From(string movieImagePath, string movieBackdropPath, byte[] movieImage, 
+        byte[] movieBackdropImage, string movieTitle, string movieDescription, string movieCategory, 
+        string director, DateTime releaseDate, TimeSpan runtime)
     {
         var isCreate = false;
-        var result = MoviePostValidation(moviePostImage, moviePostTitle, moviePostDescription,
-            category, isCreate);
+
+        var result = MoviePostValidation(movieImagePath, movieBackdropPath, movieImage, movieBackdropImage, 
+            movieTitle, movieDescription, movieCategory, director, isCreate);
 
         if (result.Count > 0)
         {
-            var emptyMoviePost = new MoviePost(Guid.Empty, string.Empty, string.Empty,
-                new byte[0], string.Empty, string.Empty, string.Empty);
+            var emptyMoviePost = new MoviePost(string.Empty, string.Empty, string.Empty,
+                new byte[0], new byte[0], string.Empty, string.Empty, string.Empty, string.Empty,
+                DateTime.Now, TimeSpan.Zero);
             return Result.AddErrors(result, emptyMoviePost);
         }
 
-        moviePost.MoviePostTitle = moviePostTitle;
-        moviePost.MoviePostImage = moviePostImage;
-        moviePost.MoviePostDescription = moviePostDescription;
-        moviePost.Category = category;
+        var moviePost = new MoviePost(movieImagePath, movieBackdropPath, movieImage,
+           movieBackdropImage, movieTitle, movieDescription, movieCategory, director, releaseDate, runtime);
 
         return Result.Ok(moviePost);
     }
 
-    private static List<Error> MoviePostValidation(byte[] moviePostImage,
-        string moviePostTitle, string moviePostDescription, string category, 
-     bool isCreate, string creatorUserId = "")
+    private static List<Error> MoviePostValidation(string moviePostImagePath, string movieBackdropPath,
+        byte[] moviePostImage, byte[] movieBackdropImage, string moviePostTitle, string moviePostDescription, 
+        string category, string director, bool isCreate, string creatorUserId = "")
     {
         List<Error> errors = new List<Error>();
+
         if (moviePostImage == null || moviePostImage.Length == 0)
         {
             errors.Add(new Error("A imagem do post deve ser fornecida."));
@@ -88,6 +128,25 @@ public class MoviePost
         if (moviePostImage?.Length > 2 * 1024 * 1024)
         {
             errors.Add(new Error("A imagem não pode ter mais que dois 2 megabytes de tamanho."));
+        }
+
+        if (movieBackdropImage == null || movieBackdropImage.Length == 0)
+        {
+            errors.Add(new Error("A imagem de fundo do post deve ser fornecida."));
+        }
+
+        if (movieBackdropImage?.Length > 2 * 1024 * 1024)
+        {
+            errors.Add(new Error("A imagem de fundo não pode ter mais que dois 2 megabytes de tamanho."));
+        }
+
+        if (string.IsNullOrWhiteSpace(moviePostImagePath))
+        {
+            errors.Add(new Error("A imagem do filme não pode estar vazia."));
+        }
+
+        if (string.IsNullOrWhiteSpace(movieBackdropPath)) {
+            errors.Add(new Error("A imagem de fundo não pode estar vazia."));
         }
 
         if (string.IsNullOrWhiteSpace(moviePostTitle))
@@ -108,6 +167,11 @@ public class MoviePost
         if (string.IsNullOrWhiteSpace(category))
         {
             errors.Add(new Error("A categoria do post não pode estar vazia"));
+        }
+
+        if (string.IsNullOrWhiteSpace(director))
+        {
+            errors.Add(new Error("O diretor do filme não pode estar vazio"));
         }
 
         if (isCreate && string.IsNullOrWhiteSpace(creatorUserId))

@@ -23,17 +23,17 @@ public class UserService : IUserService
     }
 
     public async Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO,
-        string pathImage, CancellationToken cancellationToken)
+        string pathImage, byte[] profileImageBytes, CancellationToken cancellationToken)
     {
         try
         {
             var newUser = ExtensionUserIdentity.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
-                createUserRequestDTO.Password, createUserRequestDTO.ProfileImage ?? new byte[0], pathImage, createUserRequestDTO.Roles);
+                createUserRequestDTO.Password, profileImageBytes, pathImage, createUserRequestDTO.Roles);
 
             if (newUser.IsFailure)
             {
                 var errorMessages = newUser.Errors.Select(error => error.Description).ToList();
-                throw new ValidationException("Os campos de criação de usúario não preenchidos corretamente.",
+                throw new ValidationException("Os campos de criação de usúario não foram preenchidos corretamente.",
                     errorMessages);
             }
 
@@ -141,12 +141,12 @@ public class UserService : IUserService
     }
 
     public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, string pathProfileImage,
-        CancellationToken cancellationToken)
+        byte[] profileImageBytes, CancellationToken cancellationToken)
     {
         try
         {
           var validatedUser =  ExtensionUserIdentity.From(userDTO.Username, userDTO.Email, 
-                userDTO.ProfileImage ?? new byte[0], pathProfileImage);
+                profileImageBytes, pathProfileImage);
 
             if (validatedUser.IsFailure)
             {

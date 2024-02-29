@@ -7,6 +7,8 @@ using Moq;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.DTOs.MappingsDapper;
 using NerdCritica.Domain.DTOs.User;
+using NerdCritica.Domain.Entities;
+using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
@@ -57,6 +59,115 @@ public class UserAccountTests
 
         Assert.ThrowsAsync<BadRequestException>(() => userService.GetUserByIdAsync(userId, cancellationToken));
     }
+
+    [Theory]
+    [MemberData(nameof(SuccessLoginTestData))]
+    public async Task CreateUserAsync_Success_ReturnsAuthOperationResponseDTO(
+        string userName, string email, string password, string profileImage, string pathImage, string[] roles,
+        string expectedUserId, string expectedToken, string expectedUserName, string expectedEmail, string expectedRole)
+    {
+        // Arrange
+        var createUserRequestDTO = new CreateUserRequestDTO
+        (
+            UserName: userName,
+            Email: email,
+            Password: password,
+            ProfileImage: profileImage,
+            Roles: roles.ToList()
+        );
+        var cancellationToken = CancellationToken.None;
+        var idGuid = Guid.NewGuid();
+        byte[] profileImageBytes = new byte[0];
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
+                          .ReturnsAsync(Result.Ok(new UserCreationTokenAndId(expectedUserId, expectedToken)));
+
+        userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(expectedUserId, cancellationToken))
+                         .ReturnsAsync(Result.Ok(new UserMapping
+                         {
+                             Id = idGuid,
+                             IdentityUserId = expectedUserId, // Assuming IdentityUserId is same as expectedUserId
+                             UserName = expectedUserName,
+                             Email = expectedEmail
+                         }));
+
+        userRepositoryMock.Setup(repo => repo.GetUserRoleAsync(expectedUserId, cancellationToken))
+            .ReturnsAsync(Result.Ok(expectedRole));
+
+        var imagePath = "profile.jpg";
+        var mapperMock = new Mock<IMapper>();
+        mapperMock.Setup(mapper => mapper.Map<ProfileUserResponseDTO>(It.IsAny<UserMapping>()))
+                  .Returns(new ProfileUserResponseDTO (Id: idGuid, IdentityUserId: expectedUserId,
+                  UserName: expectedUserName,
+                  Email: expectedEmail, ProfileImagePath: imagePath));
+
+        var userService = new UserService(userRepositoryMock.Object, mapperMock.Object);
+
+        // Act
+        var result = await userService.CreateUserAsync(createUserRequestDTO, pathImage, profileImageBytes,
+            cancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedToken, result.Token);
+        Assert.NotNull(result.User);
+        bool isGuid = Guid.TryParse(result.User.Id.ToString(), out Guid convert);
+        Assert.True(isGuid);
+        Assert.Equal(expectedUserId, result.User.IdentityUserId);
+        Assert.Equal(expectedUserName, result.User.UserName);
+        Assert.Equal(expectedEmail, result.User.Email);
+        Assert.Equal(expectedRole.ToList(), result.Role);
+    }
+
+    public static IEnumerable<object[]> SuccessLoginTestData =>
+        new List<object[]>
+        {
+            new object[] { "testUser", "test@example.com", "password123^^", "base64", "path/to/image", 
+                new[] { "User" }, "userId123", "token123", "testUser", "test@example.com", "User" },
+            new object[] { "testUser2", "test123@example.com", "password123##", "base64", "path/to/image",
+                new[] { "Moderator" }, "userId123", "token123", "testUser", "test123@example.com", "Moderator" },
+            new object[] { "testUser3", "test631@example.com", "password123$*", "base64", "path/to/image",
+                new[] { "Admin" }, "userId123", "token123", "testUser", "test631@example.com", "Admin" }
+        };
+
+    [Theory]
+    [MemberData(nameof(FailureLoginTestData))]
+    public async Task CreateUserAsync_Failure_ThrowsCreateUserException(string errorCode, string expectedErrorMessage)
+    {
+        // Arrange
+        var createUserRequestDTO = new CreateUserRequestDTO
+        (
+            UserName: "testUser",
+            Email: "test@example.com",
+            Password: "password123^^",
+            ProfileImage: "base64",
+            Roles: new[] { "User" }.ToList()
+        );
+        var pathImage = "path/to/image";
+        byte[] profileImageBytes = new byte[0];
+        var cancellationToken = CancellationToken.None;
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
+                          .ReturnsAsync(Result.Fail(errorCode, new UserCreationTokenAndId(string.Empty, string.Empty)));
+
+        var userService = new UserService(userRepositoryMock.Object, Mock.Of<IMapper>());
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<CreateUserException>(() =>
+            userService.CreateUserAsync(createUserRequestDTO, pathImage, profileImageBytes, cancellationToken));
+
+        Assert.Equal(expectedErrorMessage, exception.Message);
+    }
+
+    public static IEnumerable<object[]> FailureLoginTestData =>
+       new List<object[]>
+       {
+            new object[] { "DuplicateUserName", "O nome de usuário já está em uso. Escolha outro nome de usuário." },
+            new object[] { "DuplicateEmail", "O e-mail já está em uso. Utilize outro endereço de e-mail." },
+            new object[] { "Unknown", "Algo deu errado ao criar o usuário." }
+       };
 
     [Fact]
     public async Task LoginUserAsync_UserFound_ReturnsAuthOperationResponseDTO()

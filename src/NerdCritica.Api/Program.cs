@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging.Configuration;
+using NerdCritica.Api.AutoMapperProfile;
 using NerdCritica.Api.Extensions;
 using NerdCritica.Api.Utils.ExceptionService;
 using NerdCritica.Api.Utils.Helper;
@@ -24,7 +24,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
         .AddDefaultTokenProviders();
 builder.Services.AddTransient<MoviePostService>();
 builder.Services.AddTransient<UserService>();
-builder.Services.AddTransient<ExceptionHandler>();
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? Array.Empty<byte>() : Encoding.ASCII.
     GetBytes(jwtSettings["Key"] ?? string.Empty);

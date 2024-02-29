@@ -1,16 +1,16 @@
-﻿using NerdCritica.Domain.Entities;
-
-namespace NerdCritica.Domain.DTOs.Movie;
+﻿namespace NerdCritica.Domain.DTOs.Movie;
 
 public record MoviePostResponseDTO(
     Guid MoviePostId,
-    string MoviePostImagePath,
-    string MoviePostTitle,
-    string MoviePostDescription,
+    string MovieImagePath,
+    string MovieBackdropImagePath,
+    string MovieTitle,
+    string MovieDescription,
     decimal Rating,
-    ICollection<Comment> Comments,
-    string Category,
-    DateTime CreatedAt,
-    DateTime UpdatedAt
+    ICollection<CommentsResponseDTO> Comments,
+    string MovieCategory,
+    string Director,
+    DateTime ReleaseDate, 
+    string Runtime,
+    ICollection<CastMemberResponseDTO> Cast
 );
-

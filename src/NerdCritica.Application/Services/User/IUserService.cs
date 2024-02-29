@@ -8,8 +8,8 @@ public interface IUserService
     Task<ProfileUserResponseDTO> GetUserByIdAsync(string userId, CancellationToken cancellationToken);
     Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken);
     Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO, 
-        string pathImage, CancellationToken cancellationToken);
+        string pathImage, byte[] profileImageBytes, CancellationToken cancellationToken);
     Task<AuthOperationResponseDTO> LoginUserAsync(UserLoginRequestDTO user, CancellationToken cancellationToken);
     Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, string pathProfileImage,
-        CancellationToken cancellationToken);
+        byte[] profileImageBytes, CancellationToken cancellationToken);
 }

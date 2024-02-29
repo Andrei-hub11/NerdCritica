@@ -4,32 +4,30 @@ namespace NerdCritica.Domain.Entities;
 
 public class Comment
 {
-    public Guid CommentId { get; private set; }
     public Guid RatingId { get; private set; }
     public string IdentityUserId { get; private set; } = string.Empty;
     public string Content { get; private set; } = string.Empty;
 
-    private Comment(Guid commentId, Guid ratingId, string identityUserId, string content)
+    private Comment(Guid ratingId, string identityUserId, string content)
     {
-        CommentId = commentId;
         RatingId = ratingId;
         IdentityUserId = identityUserId;
         Content = content;
     }
 
-    public static Result<Comment> Create(Guid commentId, Guid ratingId, string userId, string content)
+    public static Result<Comment> Create(Guid ratingId, string identityUserId, string content)
     {
         var isCreate = true;
-        var result = CommentValidation(content, isCreate, ratingId, userId);
+        var result = CommentValidation(content, isCreate, ratingId, identityUserId);
 
         if (result.Count > 0)
         {
-            var emptyComment = new Comment(Guid.Empty, Guid.Empty, string.Empty,
+            var emptyComment = new Comment(Guid.Empty, string.Empty,
                 string.Empty);
             return Result.AddErrors(result, emptyComment);
         }
 
-        var comment = new Comment(commentId, ratingId, userId, content);
+        var comment = new Comment(ratingId, identityUserId, content);
 
         return Result.Ok(comment);
     }
@@ -41,7 +39,7 @@ public class Comment
 
         if (result.Count > 0)
         {
-            var emptyComment = new Comment(Guid.Empty, Guid.Empty, string.Empty,
+            var emptyComment = new Comment(Guid.Empty, string.Empty,
                 string.Empty);
             return Result.AddErrors(result, emptyComment);
         }

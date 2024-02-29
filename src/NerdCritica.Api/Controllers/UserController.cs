@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.DTOs.User;
+using NerdCritica.Domain.Entities;
+using NerdCritica.Domain.Utils;
 using System.Security.Claims;
 
 namespace NerdCritica.Api.Controllers;
@@ -45,8 +47,9 @@ public class UserController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(user.ProfileImage ?? new byte[0]);
-        var resultDTO = await _userService.CreateUserAsync(user, pathProfileImage, cancellationToken);
+        byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
+        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(profileImageBytes);
+        var resultDTO = await _userService.CreateUserAsync(user, pathProfileImage, profileImageBytes, cancellationToken);
 
         return Ok(new
         {
@@ -85,9 +88,11 @@ public class UserController : ControllerBase
         {
             return StatusCode(499);
         }
-        
-        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(user.ProfileImage ?? new byte[0]);
-        var resultDTO = await _userService.UpdateUserAsync(user, userId, pathProfileImage, cancellationToken);
+
+        byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
+        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(profileImageBytes);
+        var resultDTO = await _userService.UpdateUserAsync(user, userId, pathProfileImage, profileImageBytes,
+            cancellationToken);
 
         return Ok(new
         {

@@ -1,8 +1,13 @@
-﻿
+﻿namespace NerdCritica.Domain.DTOs.Movie;
 
-namespace NerdCritica.Domain.DTOs.Movie;
-
-public record UpdateMoviePostRequestDTO(string MoviePostImagePath,
-    string MoviePostTitle,
-    string MoviePostDescription, string Category
+public record UpdateMoviePostRequestDTO(
+    string MovieImage, 
+    string MovieBackdropImage,
+    string MovieTitle,
+    string MovieDescription, 
+    string MovieCategory, 
+    string Director,
+    List<UpdateCastMemberRequestDTO> Cast,
+    TimeSpan Runtime,
+    DateTime ReleaseDate
     );
