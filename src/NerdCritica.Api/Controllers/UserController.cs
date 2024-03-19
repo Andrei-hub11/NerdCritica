@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Api.Utils.Helper;
+using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
+using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Utils;
 using System.Security.Claims;
 
@@ -14,10 +17,12 @@ namespace NerdCritica.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly UserService _userService;
+    private readonly EmailService _emailService;
 
-    public UserController(UserService userService)
+    public UserController(UserService userService, EmailService emailService)
     {
         _userService = userService;
+        _emailService = emailService;
     }
 
     [Authorize]
@@ -37,6 +42,16 @@ public class UserController : ControllerBase
             User = user,
         });
     }
+
+    //[HttpPost("forgot-password")]
+    //public async Task<IActionResult> ForgotPassword()
+    //{
+    //    EmailMetadata emailMetadata = new("seu-email@exemplo.com",
+    //"FluentEmail Test email",
+    //"This is a test email from FluentEmail.");
+    //    await _emailService.Send(emailMetadata);
+    //    return Ok();
+    //}
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequestDTO user,

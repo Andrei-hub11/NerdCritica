@@ -103,6 +103,11 @@ public class CastMember
             errors.Add(new Error("O id do membro é necessario."));
         }
 
+        if (roleType < 1 || roleType > 10)
+        {
+            errors.Add(new Error("O valor de RoleType deve estar entre 1 e 10."));
+        }
+
         return errors;
     }
 
@@ -116,6 +121,7 @@ public class CastMember
         { 6, "Diretor" },
         { 7, "Escritor" },
         { 8, "Compositor" },
-        { 9, "Produtor" }
+        { 9, "Produtor" },
+        { 10, "Desconhecido" }
     };
 }

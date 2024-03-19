@@ -15,10 +15,16 @@ public class Comment
         Content = content;
     }
 
+    private Comment(string identityUserId, string content)
+    {
+        IdentityUserId = identityUserId;
+        Content = content;
+    }
+
     public static Result<Comment> Create(Guid ratingId, string identityUserId, string content)
     {
         var isCreate = true;
-        var result = CommentValidation(content, isCreate, ratingId, identityUserId);
+        var result = CommentValidation(content, isCreate, identityUserId, ratingId);
 
         if (result.Count > 0)
         {
@@ -32,10 +38,10 @@ public class Comment
         return Result.Ok(comment);
     }
 
-    public static Result<Comment> Update(Comment comment, string content)
+    public static Result<Comment> From(string identityUserId, string content)
     {
         var isCreate = false;
-        var result = CommentValidation(content, isCreate);
+        var result = CommentValidation(content, isCreate, identityUserId);
 
         if (result.Count > 0)
         {
@@ -44,13 +50,13 @@ public class Comment
             return Result.AddErrors(result, emptyComment);
         }
 
-        comment.Content = content;
+        var newComment = new Comment(identityUserId, content);
 
-        return Result.Ok(comment);
+        return Result.Ok(newComment);
     }
 
-    private static List<Error> CommentValidation(string comment, bool isCreate, 
-        Guid? ratingId = null, string identityUserId = "")
+    private static List<Error> CommentValidation(string comment, bool isCreate, string identityUserId,
+        Guid? ratingId = null)
     {
         var errors = new List<Error>();
 
@@ -64,7 +70,7 @@ public class Comment
             errors.Add(new Error("O id da avaliação precisa ser fornecido."));
         }
 
-        if (isCreate && string.IsNullOrWhiteSpace(identityUserId))
+        if (string.IsNullOrWhiteSpace(identityUserId))
         {
             errors.Add(new Error("O id do usuário não pode estar vazio"));
         }

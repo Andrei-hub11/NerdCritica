@@ -24,17 +24,25 @@ public class UserAccountTests
         var IdentityUserId = "user123";
         var UserId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
+
         var userRepositoryMock = new Mock<IUserRepository>();
-        var mapperMock = new Mock<IMapper>();
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<UserMapping, ProfileUserResponseDTO>();
+        });
+
+        var mapper = new Mapper(configuration);
+
         var expectedUser = new UserMapping { Id = UserId, IdentityUserId = IdentityUserId, 
             UserName = "testUser", Email = "test@example.com", ProfileImagePath = "profile.jpg" };
+
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(IdentityUserId, cancellationToken))
                           .ReturnsAsync(Result.Ok(expectedUser));
+
         var expectedProfileDTO = new ProfileUserResponseDTO(Id: UserId, IdentityUserId: IdentityUserId,
             UserName: "testUser", Email: "test@example.com", ProfileImagePath: "profile.jpg");
-        mapperMock.Setup(mapper => mapper.Map<ProfileUserResponseDTO>(expectedUser))
-                  .Returns(expectedProfileDTO);
-        var userService = new UserService(userRepositoryMock.Object, mapperMock.Object);
+      
+        var userService = new UserService(userRepositoryMock.Object, mapper);
 
         var result = await userService.GetUserByIdAsync(IdentityUserId, cancellationToken);
 

@@ -6,13 +6,19 @@ public class MovieRating
 {
     public Guid RatingId { get; private set; }
     public Guid MoviePostId { get; private set; }
-    public string IdentityUserId { get; private set; }
+    public string IdentityUserId { get; private set; } = string.Empty;
     public decimal Rating { get; private set; }
 
-    private MovieRating(Guid moviePostId, string userId, decimal rating)
+    private MovieRating(Guid moviePostId, string identityUserId, decimal rating)
     {
         MoviePostId = moviePostId;
-        IdentityUserId = userId;
+        IdentityUserId = identityUserId;
+        Rating = rating;
+    }
+
+    private MovieRating(string identityUserId, decimal rating)
+    {
+        IdentityUserId = identityUserId;
         Rating = rating;
     }
 
@@ -33,7 +39,7 @@ public class MovieRating
         return Result.Ok(moviePost);
     }
 
-    public static Result<MovieRating> Update(MovieRating movieRating, decimal rating)
+    public static Result<MovieRating> From(string identityUserId, decimal rating)
     {
         var isCreate = false;
         var result = MovieRatingValidation(rating, isCreate);
@@ -43,8 +49,10 @@ public class MovieRating
             var emptyMoviePost = new MovieRating(Guid.Empty, string.Empty, 0);
             return Result.AddErrors(result, emptyMoviePost);
         }
-        movieRating.Rating = rating;
-        return Result.Ok(movieRating);
+
+        var newRating = new MovieRating(identityUserId, rating);
+
+        return Result.Ok(newRating);
     }
 
     private static List<Error> MovieRatingValidation(decimal rating, bool isCreate, 

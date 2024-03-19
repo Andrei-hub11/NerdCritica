@@ -1,13 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace NerdCritica.Api.Extensions;
 
 public static class AuthenticationExtensions
 {
-    public static void AddJwtAuthentication(this IServiceCollection services, byte[] key)
+    public static void AddJwtAuthentication(this IServiceCollection services, ConfigurationManager configuration)
     {
+        var jwtSettings = configuration.GetSection("Jwt");
+        var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? Array.Empty<byte>() : Encoding.ASCII.
+            GetBytes(jwtSettings["Key"] ?? string.Empty);
+
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

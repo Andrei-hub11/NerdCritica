@@ -12,5 +12,8 @@ public interface IMoviePostService
     Task<bool> CreateRatingAsync(CreateRatingRequestDTO rating, CancellationToken cancellationToken);
     Task<bool> UpdateMoviePostAsync(UpdateMoviePostRequestDTO moviePost, MovieImages postImages, 
         Dictionary<string, CastImages> castImagePaths, Guid moviePostId, CancellationToken cancellationToken);
-    Task<bool> DeleteMoviePostAsync(string moviePostId);
+    Task<bool> UpdateMovieRatingAsync(UpdateMovieRatingRequestDTO movieRating, Guid movieRatingId,
+        CancellationToken cancellationToken);
+    Task<bool> DeleteMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken);
+    Task<bool> DeleteMovieRatingAsync(Guid movieRatingId, CancellationToken cancellationToken);
 }

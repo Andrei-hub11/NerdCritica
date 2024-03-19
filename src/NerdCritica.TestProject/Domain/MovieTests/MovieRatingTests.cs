@@ -38,22 +38,17 @@ public class MovieRatingTests
             result.Errors.Select(e => e.Description));
     }
 
-    [Fact(DisplayName = "Update should return success result with valid data")]
-    public void Update_WithValidData_ShouldReturnSuccessResult()
+    [Fact(DisplayName = "From should return success result with valid data")]
+    public void From_WithValidData_ShouldReturnSuccessResult()
     {
-        // Arrange
-        var moviePostId = Guid.NewGuid();
         var identityUserId = Guid.NewGuid().ToString();
         var rating = 4.5m;
-        var movieRating = MovieRating.Create(moviePostId, identityUserId, rating);
 
-        var updatedRating = 3.5m;
-        var result = MovieRating.Update(movieRating.Value, updatedRating);
+        var result = MovieRating.From(identityUserId, rating);
 
         Assert.True(result.Success);
-        Assert.Equal(moviePostId, result.Value.MoviePostId);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);
-        Assert.Equal(updatedRating, result.Value.Rating);
+        Assert.Equal(rating, result.Value.Rating);
     }
 
     [Theory(DisplayName = "Update should return failure result with invalid rating")]
@@ -61,15 +56,11 @@ public class MovieRatingTests
     [InlineData(10.0, "A avaliação não pode ser maior que 5.")]
     [InlineData(-1.0, "A avaliação não pode ser menor que 0.")]
     [InlineData(-10.0, "A avaliação não pode ser menor que 0.")]
-    public void Update_WithInvalidRating_ShouldReturnFailureResult(decimal invalidRating, string expectedErrorMessage)
+    public void From_WithInvalidRating_ShouldReturnFailureResult(decimal invalidRating, string expectedErrorMessage)
     {
-        var movieRatingId = Guid.NewGuid();
-        var moviePostId = Guid.NewGuid();
         var identityUserId = Guid.NewGuid().ToString();
-        var rating = 4.5m;
-        var movieRating = MovieRating.Create(moviePostId, identityUserId, rating);
 
-        var result = MovieRating.Update(movieRating.Value, invalidRating);
+        var result = MovieRating.From(identityUserId, invalidRating);
 
         Assert.False(result.Success);
         Assert.NotEqual(invalidRating, result.Value.Rating);

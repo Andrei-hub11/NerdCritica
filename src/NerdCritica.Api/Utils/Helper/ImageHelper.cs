@@ -114,13 +114,13 @@ public static class ImageHelper
 
     public static async Task<Dictionary<string, CastImages>> GetPathCastImagesAsync(List<UpdateCastMemberRequestDTO> cast)
     {
-        Dictionary<string, CastImages> profileImagePaths = new();
+        Dictionary<string, CastImages> imagePaths = new();
 
         if (cast != null && cast.Count > 0)
         {
             foreach (var item in cast)
             {
-                string profileImagePath = "";
+                string memberImagePath = "";
                 try
                 {
                     byte[] memberImageBytes = Base64Helper.ConvertFromBase64String(item.MemberImage);
@@ -129,9 +129,9 @@ public static class ImageHelper
 
                     await SaveImageAsync(filePath, memberImageBytes);
 
-                    profileImagePath = "movies/cast/" + fileName;
+                    memberImagePath = "movies/cast/" + fileName;
 
-                    profileImagePaths.Add(item.MemberName, CastImages.Create(profileImagePath, memberImageBytes));
+                    imagePaths.Add(item.MemberName, CastImages.Create(memberImagePath, memberImageBytes));
                 }
                 catch (Exception ex)
                 {
@@ -141,7 +141,7 @@ public static class ImageHelper
             }
         }
 
-        return profileImagePaths;
+        return imagePaths;
     }
 
     private static async Task SaveImageAsync(string filePath, byte[] imageBytes)

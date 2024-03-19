@@ -1,57 +1,28 @@
 using System.Net;
-using System.Text;
-using Microsoft.AspNetCore.Identity;
 using NerdCritica.Api.AutoMapperProfile;
 using NerdCritica.Api.Extensions;
-using NerdCritica.Api.Utils.ExceptionService;
 using NerdCritica.Api.Utils.Helper;
-using NerdCritica.Application.Services.Movies;
-using NerdCritica.Application.Services.User;
-using NerdCritica.Infrastructure.Context;
 using NerdCritica.Infrastructure.DependencyInjection;
 using Newtonsoft.Json;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddUserContext(builder.Configuration);
-builder.Services
- .AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddDefaultTokenProviders();
-builder.Services.AddTransient<MoviePostService>();
-builder.Services.AddTransient<UserService>();
+builder.Services.AddGeneralServices();
+builder.Services.AddCustomIdentity();
+builder.Services.AddCustomAuthorization();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+builder.Services.AddFluentEmail(builder.Configuration);
 
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? Array.Empty<byte>() : Encoding.ASCII.
-    GetBytes(jwtSettings["Key"] ?? string.Empty);
-
-builder.Services.AddJwtAuthentication(key);
+builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.ConfigureIdentityOptions();
-Log.Logger = new LoggerConfiguration().ReadFrom.
-    Configuration(builder.Configuration).CreateLogger();
 
-
+builder.Services.AddSerilogSettings(builder.Configuration);
+builder.Services.AddSingleton<LoggerHelper>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Logging.ClearProviders();
-builder.Logging.AddSerilog();
-builder.Services.AddLogging();
-builder.Services.AddSingleton<LoggerHelper>();
-builder.Services.AddSingleton<ErrorHandlerOptions>();
-builder.Services.AddSingleton<ExceptionHandler>();
-builder.Services.AddSingleton<ExceptionDetailsHelper>();
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("User", policy => policy.RequireRole("User"));
-    options.AddPolicy("ModeratorOrAdmin", policy => policy.RequireRole("Moderator", "Admin"));
-});
+builder.Services.AddErrorsConfig();
 
 var app = builder.Build();
 app.Services.GetRequiredService<IConfiguration>();

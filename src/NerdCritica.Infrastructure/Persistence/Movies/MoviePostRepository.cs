@@ -16,6 +16,55 @@ public class MoviePostRepository : IMoviePostRepository
         _dapperContext = dapperContext;
     }
 
+    public async Task<MoviePostMapping?> GetMoviePostByIdAsync(Guid moviePostId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"
+            SELECT mp.MoviePostId, mp.MovieImagePath, mp.MovieBackdropImagePath, mp.MovieTitle, mp.MovieDescription, 
+              mp.MovieCategory, mp.Director, mp.ReleaseDate, mp.Runtime, mr.Rating, c.CommentId, c.RatingId,
+                c.IdentityUserId, c.Content, cm.CastMemberId, cm.MemberName, cm.CharacterName,
+                cm.MemberImagePath, cm.RoleInMovie, cm.RoleType
+            FROM 
+                MoviePost mp
+            LEFT JOIN 
+                MovieRating mr ON mp.MoviePostId = mr.MoviePostId
+            LEFT JOIN 
+                Comment c ON mr.RatingId = c.RatingId
+            LEFT JOIN 
+                CastMember cm ON mp.MoviePostId = cm.MoviePostId
+            WHERE 
+                mp.MoviePostId = @MoviePostId
+            ORDER BY 
+                cm.RoleType ASC
+           ";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            var moviePost = (await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, MoviePostMapping>(
+    query,
+    (moviePostMapping, commentsMapping, castMemberMapping) =>
+    {
+        if (moviePostMapping == null)
+            return new MoviePostMapping();
+
+        if (commentsMapping != null && !moviePostMapping.Comments.Any(c => c.CommentId == commentsMapping.CommentId))
+            moviePostMapping.Comments.Add(commentsMapping);
+
+        if (castMemberMapping != null && !moviePostMapping.Cast.Any(cast => cast.CastMemberId == castMemberMapping.CastMemberId))
+            moviePostMapping.Cast.Add(castMemberMapping);
+
+        return moviePostMapping;
+    },
+    new { MoviePostId = moviePostId },
+    splitOn: "CommentId, CastMemberId"
+              )).FirstOrDefault();
+
+            return moviePost;
+
+        }
+    }
+
     public async Task<IEnumerable<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -40,7 +89,7 @@ public class MoviePostRepository : IMoviePostRepository
             var moviePostDictionary = new Dictionary<Guid, MoviePostMapping>();
 
             await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, MoviePostMapping
-                >(query, (moviePostMapping, commentsMapping, castMemberMapping) 
+                >(query, (moviePostMapping, commentsMapping, castMemberMapping)
                 =>
                 {
                     if (!moviePostDictionary.TryGetValue(moviePostMapping.MoviePostId, out var currentMoviePost))
@@ -51,7 +100,7 @@ public class MoviePostRepository : IMoviePostRepository
                         moviePostDictionary.Add(currentMoviePost.MoviePostId, currentMoviePost);
                     }
 
-                    if (commentsMapping != null && !currentMoviePost.Comments.Any(c => 
+                    if (commentsMapping != null && !currentMoviePost.Comments.Any(c =>
                     c.CommentId == commentsMapping.CommentId))
                     {
                         currentMoviePost.Comments.Add(commentsMapping);
@@ -70,7 +119,36 @@ public class MoviePostRepository : IMoviePostRepository
 
             return moviePostDictionary.Values;
         }
-     }
+    }
+
+    public async Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId, string identityUserId, 
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"SELECT mr.RatingId, mr.IdentityUserId, mr.Rating, c.CommentId, c.RatingId,
+                c.IdentityUserId, c.Content 
+                FROM MovieRating mr
+                LEFT JOIN
+                     Comment c ON mr.RatingId = c.RatingId
+                WHERE mr.RatingId = @RatingId AND mr.IdentityUserId = @IdentityUserId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            var movieRating = (await connection.QueryAsync<MovieRatingMapping, CommentsMapping
+                , MovieRatingMapping>(query, (rating, comment) =>
+                {
+                    if (comment != null)
+                    {
+                        rating.Comment = comment;
+                    }
+                    return rating;
+                }, new {RatingId = ratingId, IdentityUserId = identityUserId},
+                splitOn: "RatingId")).FirstOrDefault();
+
+            return movieRating;
+        }
+    }
 
     public async Task<Guid> CreateMoviePostAsync(MoviePost moviePost, CancellationToken cancellationToken)
     {
@@ -133,7 +211,7 @@ public class MoviePostRepository : IMoviePostRepository
             return true;
         }
 
-     }
+    }
 
     public async Task<Guid> CreateRatingAsync(MovieRating rating, CancellationToken cancellationToken)
     {
@@ -164,9 +242,9 @@ public class MoviePostRepository : IMoviePostRepository
         {
             await connection.QueryAsync(query, new
             {
-               comment.RatingId,
-               comment.IdentityUserId,
-               comment.Content
+                comment.RatingId,
+                comment.IdentityUserId,
+                comment.Content
             });
 
             return true;
@@ -235,9 +313,74 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public Task<bool> DeleteMoviePostAsync(string moviePostId)
+    public async Task<bool> UpdateMovieRatingAsync(MovieRating movieRating, Guid movieRatingId,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        string query = @"UPDATE MovieRating SET Rating = @Rating WHERE RatingId = @RatingId AND 
+        IdentityUserId = @IdentityUserId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                movieRating.Rating,
+                RatingId = movieRatingId,
+                movieRating.IdentityUserId,
+            });
+
+            return true;
+        }
     }
 
+    public async Task<bool> UpdateCommentAsync(Comment comment, Guid movieRatingId)
+    {
+        string query = @"UPDATE Comment SET Content = @Content WHERE RatingId = @RatingId AND 
+        IdentityUserId = @IdentityUserId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                comment.Content,
+                RatingId = movieRatingId,
+                comment.IdentityUserId
+            });
+
+            return true;
+        }
+    }
+
+    public async Task<bool> DeleteMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"DELETE FROM MoviePost WHERE MoviePostId = @MoviePostId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                MoviePostId = moviePostId,
+            });
+
+            return true;
+        }
+    }
+
+    public async Task<bool> DeleteMovieRatingAsync(Guid movieRatingId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"DELETE FROM MovieRating WHERE RatingId = @RatingId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                RatingId = movieRatingId,
+            });
+
+            return true;
+        }
+    }
 }

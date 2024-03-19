@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.Movies;
 using NerdCritica.Domain.DTOs.Movie;
-using NerdCritica.Domain.Entities;
 
 namespace NerdCritica.Api.Controllers;
 
@@ -86,5 +85,50 @@ public class MoviesController : ControllerBase
             cancellationToken);
 
         return Ok(new { Success = isUpdated });
+    }
+
+    [Authorize(Policy = "Admin")]
+    [HttpPut("update-movierating/{movieRatingId}")]
+    public async Task<IActionResult> UpdateMovieRating(UpdateMovieRatingRequestDTO movieRating, 
+        Guid movieRatingId, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var isUpdated = await _postService.UpdateMovieRatingAsync(movieRating, movieRatingId, 
+            cancellationToken);
+
+        return Ok(new { Success = true });
+    }
+
+    [Authorize(Policy = "Admin")]
+    [HttpDelete("delete-movie/{moviePostId}")]
+    public async Task<IActionResult> DeleteMoviePost(Guid moviePostId,
+       CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        bool isDeleted = await _postService.DeleteMoviePostAsync(moviePostId, cancellationToken);
+
+        return Ok(new { Success = isDeleted });
+    }
+
+    [Authorize(Policy = "Admin")]
+    [HttpDelete("delete-movierating/{movieRatingId}")]
+    public async Task<IActionResult> DeleteMovieRating(Guid movieRatingId, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        bool isDeleted = await _postService.DeleteMovieRatingAsync(movieRatingId, cancellationToken);
+
+        return Ok(new { Success = isDeleted });
     }
 }
