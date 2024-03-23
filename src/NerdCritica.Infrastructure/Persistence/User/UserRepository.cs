@@ -99,6 +99,26 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<IEnumerable<FavoriteMovieMapping>> GetFavoriteMovies(string identityUserId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"SELECT mp.MoviePostId, mp.MovieImagePath, fm.CreatedAt, fm.FavoriteMovieId
+        FROM MoviePost mp
+        JOIN FavoriteMovie fm ON mp.MoviePostId = fm.MoviePostId
+        WHERE fm.IdentityUserId = @IdentityUserId 
+        ORDER BY fm.CreatedAt DESC";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            var favoriteMovies = await connection.QueryAsync<FavoriteMovieMapping>(new CommandDefinition(query,
+                new { IdentityUserId = identityUserId }, cancellationToken: cancellationToken));
+
+            return favoriteMovies;
+        }
+    }
+
     public async Task<Result<UserCreationTokenAndId>> CreateUserAsync(ExtensionUserIdentity createUser)
     {
         var newIdentityUser = new IdentityUser { UserName = createUser.UserName, Email = createUser.Email };
@@ -167,6 +187,21 @@ public class UserRepository : IUserRepository
         return Result.Ok(new UserLogin(token, user.Value));
     }
 
+    public async Task<bool> AddFavoriteMovieAsync(FavoriteMovie favoriteMovie, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"INSERT INTO FavoriteMovie (IdentityUserId, MoviePostId, CreatedAt) VALUES 
+        (@IdentityUserId, @MoviePostId, @CreatedAt)";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new { favoriteMovie.IdentityUserId, favoriteMovie.MoviePostId,
+            favoriteMovie.CreatedAt});
+            return true;
+        }
+    }
+
     public Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
@@ -204,4 +239,21 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<bool> RemoveFavoriteMovie(Guid favoriteMovieId, string identityUserId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"DELETE FROM FavoriteMovie WHERE FavoriteMovieId = @FavoriteMovieId AND IdentityUserId = @IdentityUserId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                FavoriteMovieId = favoriteMovieId,
+                IdentityUserId = identityUserId
+            });
+
+            return true;
+        }
+    }
 }

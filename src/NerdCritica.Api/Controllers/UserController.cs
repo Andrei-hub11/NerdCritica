@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.DTOs.User;
-using NerdCritica.Domain.Entities;
-using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Utils;
 using System.Security.Claims;
 
@@ -17,18 +14,22 @@ namespace NerdCritica.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly UserService _userService;
-    private readonly EmailService _emailService;
+    //private readonly EmailService _emailService;
 
-    public UserController(UserService userService, EmailService emailService)
+    public UserController(UserService userService)
     {
         _userService = userService;
-        _emailService = emailService;
     }
 
     [Authorize]
     [HttpGet("get-me")]
     public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Obtém o ID do usuário do token JWT
 
         if (string.IsNullOrWhiteSpace(userId))
@@ -40,6 +41,22 @@ public class UserController : ControllerBase
         return Ok(new
         {
             User = user,
+        });
+    }
+
+    [Authorize]
+    [HttpGet("favorite-movies/{identityUserId}")]
+    public async Task<IActionResult> GetFavoriteMovies(string identityUserId, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var favoriteMovies = await _userService.GetFavoriteMovies(identityUserId, cancellationToken);
+        return Ok(new
+        {
+            FavoriteMovies = favoriteMovies,
         });
     }
 
@@ -57,9 +74,9 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Register([FromBody] CreateUserRequestDTO user,
         CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid)
+        if (cancellationToken.IsCancellationRequested)
         {
-            return BadRequest(ModelState);
+            return StatusCode(499);
         }
 
         byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
@@ -95,8 +112,23 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("update/{userId}")]
-    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestDTO user, string userId,
+    [HttpPost("favorite-movie")]
+    public async Task<IActionResult> AddFavoriteMovie([FromBody] AddFavoriteMovieRequestDTO addFavoriteMovieRequestDTO,
+        CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        bool isAdded = await _userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken);
+
+        return Ok(isAdded);
+    }
+
+    [Authorize]
+    [HttpPut("update/{identityUserId}")]
+    public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestDTO user, string identityUserId,
       CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -106,7 +138,7 @@ public class UserController : ControllerBase
 
         byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
         var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(profileImageBytes);
-        var resultDTO = await _userService.UpdateUserAsync(user, userId, pathProfileImage, profileImageBytes,
+        var resultDTO = await _userService.UpdateUserAsync(user, identityUserId, pathProfileImage, profileImageBytes,
             cancellationToken);
 
         return Ok(new
@@ -116,4 +148,19 @@ public class UserController : ControllerBase
         });
     }
 
+    [Authorize]
+    [HttpDelete("favorite-movie")]
+    public async Task<IActionResult> RemoveFavoriteMovie([FromBody] RemoveFavoriteMovieRequestDTO removeFavoriteMovie,
+        CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        bool isRemoved = await _userService.RemoveFavoriteMovie(removeFavoriteMovie.FavoriteMovieId, 
+            removeFavoriteMovie.IdentityUserId, cancellationToken);
+
+        return Ok(isRemoved);
+    }
 }

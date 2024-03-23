@@ -3,22 +3,24 @@ using AutoMapper;
 using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
-using NerdCritica.Domain.ObjectValues;
+using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
-using Newtonsoft.Json;
+
 
 namespace NerdCritica.Application.Services.User;
 
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IMoviePostRepository _moviePostRepository;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IMapper mapper)
+    public UserService(IUserRepository userRepository, IMoviePostRepository moviePostRepository, IMapper mapper)
     {
         _userRepository = userRepository;
+        _moviePostRepository = moviePostRepository;
         _mapper = mapper;
     }
 
@@ -96,6 +98,27 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<ICollection<FavoriteMovieResponseDTO>> GetFavoriteMovies(string identityUserId, CancellationToken cancellationToken)
+    {
+       try
+        {
+            var favoriteMovies = await _userRepository.GetFavoriteMovies(identityUserId, cancellationToken);
+
+            if (!favoriteMovies.Any())
+            {
+                return Enumerable.Empty<FavoriteMovieResponseDTO>().ToList();
+            }
+
+            var favoriteMovieResponses = _mapper.Map<IEnumerable<FavoriteMovieResponseDTO>>(favoriteMovies)
+                .ToList();
+
+            return favoriteMovieResponses;
+        } catch (Exception)
+        {
+            throw;
+        }
+    }
+
     public async Task<AuthOperationResponseDTO> LoginUserAsync(UserLoginRequestDTO user,
         CancellationToken cancellationToken)
     {
@@ -130,6 +153,52 @@ public class UserService : IUserService
 
         }
         catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<bool> AddFavoriteMovieAsync(AddFavoriteMovieRequestDTO addFavoriteMovieRequestDTO, 
+        CancellationToken cancellationToken)
+    {
+       try
+        {
+            var user = await _userRepository.GetUserByIdAsync(addFavoriteMovieRequestDTO.IdentityUserId,
+                cancellationToken);
+
+            if (user.IsFailure)
+            {
+                var errorMessages = user.Errors.Select(error => error.Description).ToList();
+                throw new NotFoundException(string.Join(", ", errorMessages));
+            }
+
+            var favoriteMovie = await _userRepository.GetFavoriteMovies(addFavoriteMovieRequestDTO.IdentityUserId,
+                cancellationToken);
+
+            bool favoriteMovieDuplicated = favoriteMovie.Any(fm => fm.MoviePostId ==
+            addFavoriteMovieRequestDTO.MoviePostId);
+
+            if (favoriteMovieDuplicated)
+            {
+                throw new BadRequestException($"Não foi adicionar o filme com id " +
+                    $"{addFavoriteMovieRequestDTO.MoviePostId} como favorito, pois já está favoritado.");
+            }
+
+            var movie = await _moviePostRepository.GetMoviePostByIdAsync(addFavoriteMovieRequestDTO.MoviePostId,
+                cancellationToken);
+
+            if (movie == null)
+            {
+                throw new NotFoundException($"O post de filme com o id {addFavoriteMovieRequestDTO.MoviePostId} não existe.");
+            }
+
+            var favoriteMovieValited = FavoriteMovie.Create(addFavoriteMovieRequestDTO.MoviePostId, 
+                addFavoriteMovieRequestDTO.IdentityUserId);
+
+            bool isCreate = await _userRepository.AddFavoriteMovieAsync(favoriteMovieValited.Value, cancellationToken);
+
+            return isCreate;
+        } catch (Exception)
         {
             throw;
         }
@@ -187,6 +256,29 @@ public class UserService : IUserService
             var userUpdated = _mapper.Map<ProfileUserResponseDTO>(user.Value);
             return userUpdated;
 
+        } catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<bool> RemoveFavoriteMovie(Guid favoriteMovieId, string identityUserId, CancellationToken cancellationToken)
+    {
+       try
+        {
+            var favoriteMovies = await _userRepository.GetFavoriteMovies(identityUserId, cancellationToken);
+
+            bool favoriteMovieExist = favoriteMovies.Any(fm =>
+            fm.FavoriteMovieId == favoriteMovieId);
+
+            if (!favoriteMovieExist)
+            {
+                throw new NotFoundException($"O filme favoritado com o id {favoriteMovieId} não existe.");
+            }
+
+            bool isRemoved = await _userRepository.RemoveFavoriteMovie(favoriteMovieId, identityUserId, cancellationToken);
+
+            return isRemoved;
         } catch (Exception)
         {
             throw;

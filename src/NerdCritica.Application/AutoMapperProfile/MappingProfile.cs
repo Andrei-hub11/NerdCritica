@@ -9,6 +9,7 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
+        CreateMap<FavoriteMovieMapping, FavoriteMovieResponseDTO>();
         CreateMap<UserMapping, ProfileUserResponseDTO>();
         CreateMap<CastMemberMapping, CastMemberResponseDTO>();
         CreateMap<CommentsMapping, CommentsResponseDTO>();
