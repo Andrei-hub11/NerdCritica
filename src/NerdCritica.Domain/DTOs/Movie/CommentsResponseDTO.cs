@@ -1,3 +1,6 @@
-﻿namespace NerdCritica.Domain.DTOs.Movie;
+﻿using NerdCritica.Domain.DTOs.MappingsDapper;
 
-public record CommentsResponseDTO (Guid CommentId, Guid RatingId, string IdentityUserId, string Content);
+namespace NerdCritica.Domain.DTOs.Movie;
+
+public record CommentsResponseDTO (Guid CommentId, Guid RatingId, string IdentityUserId, string Content,
+    int LikeCount, bool LikedByCurrentUser);

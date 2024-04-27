@@ -104,11 +104,6 @@ public class UserService : IUserService
         {
             var favoriteMovies = await _userRepository.GetFavoriteMovies(identityUserId, cancellationToken);
 
-            if (!favoriteMovies.Any())
-            {
-                return Enumerable.Empty<FavoriteMovieResponseDTO>().ToList();
-            }
-
             var favoriteMovieResponses = _mapper.Map<IEnumerable<FavoriteMovieResponseDTO>>(favoriteMovies)
                 .ToList();
 

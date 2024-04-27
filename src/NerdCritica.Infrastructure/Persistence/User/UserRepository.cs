@@ -31,10 +31,10 @@ public class UserRepository : IUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string selectQuery = "SELECT au.Id, au.IdentityUserId, an.UserName, an.Email, au.ProfileImagePath " +
-                      "FROM ApplicationUsers au " +
-                      "INNER JOIN AspNetUsers an ON au.IdentityUserId = an.Id " +
-                      "WHERE au.IdentityUserId = @UserId";
+        string selectQuery = @"SELECT au.Id, au.IdentityUserId, an.UserName, an.Email, au.ProfileImagePath
+                      FROM ApplicationUsers au 
+                      INNER JOIN AspNetUsers an ON au.IdentityUserId = an.Id
+                      WHERE au.IdentityUserId = @UserId";
 
         using (var connection = _dapperContext.CreateConnection())
         {
@@ -55,10 +55,10 @@ public class UserRepository : IUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string selectQuery = "SELECT au.Id, au.IdentityUserId, an.UserName, an.Email, au.ProfileImagePath " +
-                      "FROM ApplicationUsers au " +
-                      "INNER JOIN AspNetUsers an ON au.IdentityUserId = an.Id " +
-                      "WHERE an.Email = @UserEmail";
+        string selectQuery = @"SELECT au.Id, au.IdentityUserId, an.UserName, an.Email, au.ProfileImagePath
+                      FROM ApplicationUsers au
+                      INNER JOIN AspNetUsers an ON au.IdentityUserId = an.Id
+                      WHERE an.Email = @UserEmail";
 
         using (var connection = _dapperContext.CreateConnection())
         {

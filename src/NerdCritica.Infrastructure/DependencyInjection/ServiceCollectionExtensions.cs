@@ -7,6 +7,7 @@ using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Infrastructure.Persistence.User;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Infrastructure.Persistence.Movies;
+using NerdCritica.Domain.Contracts;
 
 namespace NerdCritica.Infrastructure.DependencyInjection;
 

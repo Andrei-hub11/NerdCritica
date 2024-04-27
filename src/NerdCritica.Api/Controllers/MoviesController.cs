@@ -11,7 +11,7 @@ namespace NerdCritica.Api.Controllers;
 public class MoviesController : ControllerBase
 {
 
-    private MoviePostService _postService;
+    private readonly MoviePostService _postService;
 
     public MoviesController(MoviePostService postService)
     {
@@ -29,7 +29,21 @@ public class MoviesController : ControllerBase
 
         var movies = await _postService.GetMoviePostsAsync(cancellationToken);
 
-        return Ok(new {Movies = movies});
+        return Ok(new { Movies = movies });
+    }
+
+    [Authorize]
+    [HttpGet("{moviePostId}")]
+    public async Task<IActionResult> GetMovie(Guid moviePostId, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var movie = await _postService.GetMoviePostAsync(moviePostId, cancellationToken);
+
+        return Ok(new { Movie = movie });
     }
 
     [Authorize(Policy = "Admin")]
@@ -52,7 +66,7 @@ public class MoviesController : ControllerBase
         return Ok(new { Success = isCreate });
     }
 
-    [Authorize(Policy = "Admin")]
+    [Authorize]
     [HttpPost("create-rating")]
     public async Task<IActionResult> CreateRating(CreateRatingRequestDTO rating,
         CancellationToken cancellationToken)
@@ -66,6 +80,21 @@ public class MoviesController : ControllerBase
 
         return Ok(new { Success = isCreate });
     }
+
+    [Authorize]
+    [HttpPost("create-like")]
+    public async Task<IActionResult> CreateLike(CreateCommentLikeRequestDTO like, CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var isCreated = await _postService.CreateCommentLikeAsync(like, cancellationToken);
+
+        return Ok(new { Success = isCreated });
+    }
+
 
     [Authorize(Policy = "Admin")]
     [HttpPut("update-movie/{moviePostId}")]
@@ -131,4 +160,20 @@ public class MoviesController : ControllerBase
 
         return Ok(new { Success = isDeleted });
     }
+
+    [Authorize]
+    [HttpDelete("delete-like/{likeId}")]
+    public async Task<IActionResult> UpdateLikeDecrement(Guid likeId,
+    CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var isUpdated = await _postService.DeleteCommentLikeAsync(likeId, cancellationToken);
+
+        return Ok(new { Success = isUpdated });
+    }
+
 }

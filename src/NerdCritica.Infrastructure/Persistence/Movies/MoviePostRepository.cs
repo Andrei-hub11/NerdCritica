@@ -4,6 +4,7 @@ using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Infrastructure.Context;
+using System.Threading;
 
 
 namespace NerdCritica.Infrastructure.Persistence.Movies;
@@ -24,7 +25,8 @@ public class MoviePostRepository : IMoviePostRepository
             SELECT mp.MoviePostId, mp.MovieImagePath, mp.MovieBackdropImagePath, mp.MovieTitle, mp.MovieDescription, 
               mp.MovieCategory, mp.Director, mp.ReleaseDate, mp.Runtime, mr.Rating, c.CommentId, c.RatingId,
                 c.IdentityUserId, c.Content, cm.CastMemberId, cm.MemberName, cm.CharacterName,
-                cm.MemberImagePath, cm.RoleInMovie, cm.RoleType
+                cm.MemberImagePath, cm.RoleInMovie, cm.RoleType, l.LikeId AS CommentLikeId,
+              l.IdentityUserId, l.CommentId
             FROM 
                 MoviePost mp
             LEFT JOIN 
@@ -33,6 +35,8 @@ public class MoviePostRepository : IMoviePostRepository
                 Comment c ON mr.RatingId = c.RatingId
             LEFT JOIN 
                 CastMember cm ON mp.MoviePostId = cm.MoviePostId
+            LEFT JOIN 
+                CommentLike l ON c.CommentId = l.CommentId
             WHERE 
                 mp.MoviePostId = @MoviePostId
             ORDER BY 
@@ -41,23 +45,33 @@ public class MoviePostRepository : IMoviePostRepository
 
         using (var connection = _dapperContext.CreateConnection())
         {
-            var moviePost = (await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, MoviePostMapping>(
-    query,
-    (moviePostMapping, commentsMapping, castMemberMapping) =>
+            var moviePost = (await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, CommentLikeMapping,
+                MoviePostMapping>(query,
+       (moviePostMapping, commentsMapping, castMemberMapping, commentLikeMapping) =>
     {
         if (moviePostMapping == null)
+        {
             return new MoviePostMapping();
+        }
 
         if (commentsMapping != null && !moviePostMapping.Comments.Any(c => c.CommentId == commentsMapping.CommentId))
             moviePostMapping.Comments.Add(commentsMapping);
 
+        if (commentsMapping != null && commentLikeMapping != null && !commentsMapping.CommentsLike.Any(l =>
+         l.CommentId == commentLikeMapping.CommentId))
+        {
+            commentsMapping.CommentsLike.Add(commentLikeMapping);
+        }
+
         if (castMemberMapping != null && !moviePostMapping.Cast.Any(cast => cast.CastMemberId == castMemberMapping.CastMemberId))
+        {
             moviePostMapping.Cast.Add(castMemberMapping);
+        }
 
         return moviePostMapping;
     },
     new { MoviePostId = moviePostId },
-    splitOn: "CommentId, CastMemberId"
+    splitOn: "CommentId, CastMemberId, CommentLikeId"
               )).FirstOrDefault();
 
             return moviePost;
@@ -71,9 +85,10 @@ public class MoviePostRepository : IMoviePostRepository
 
         string query = @"
             SELECT mp.MoviePostId, mp.MovieImagePath, mp.MovieBackdropImagePath, mp.MovieTitle, mp.MovieDescription, 
-              mp.MovieCategory, mp.Director, mp.ReleaseDate, mp.Runtime, mr.Rating, c.CommentId, c.RatingId,
-                c.IdentityUserId, c.Content, cm.CastMemberId, cm.MemberName, cm.CharacterName,
-                cm.MemberImagePath, cm.RoleInMovie, cm.RoleType
+              mp.MovieCategory, mp.Director, mp.ReleaseDate, mp.Runtime, mr.Rating, 
+              c.*, cm.CastMemberId, cm.MemberName, cm.CharacterName,
+              cm.MemberImagePath, cm.RoleInMovie, cm.RoleType, l.LikeId AS CommentLikeId,
+              l.IdentityUserId, l.CommentId
             FROM 
                 MoviePost mp
             LEFT JOIN 
@@ -82,14 +97,16 @@ public class MoviePostRepository : IMoviePostRepository
                 Comment c ON mr.RatingId = c.RatingId
             LEFT JOIN 
                 CastMember cm ON mp.MoviePostId = cm.MoviePostId
+            LEFT JOIN 
+                CommentLike l ON c.CommentId = l.CommentId
             ORDER BY cm.RoleType ASC";
 
         using (var connection = _dapperContext.CreateConnection())
         {
             var moviePostDictionary = new Dictionary<Guid, MoviePostMapping>();
 
-            await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, MoviePostMapping
-                >(query, (moviePostMapping, commentsMapping, castMemberMapping)
+            await connection.QueryAsync<MoviePostMapping, CommentsMapping, CastMemberMapping, CommentLikeMapping, MoviePostMapping
+                >(query, (moviePostMapping, commentsMapping, castMemberMapping, commentLikeMapping)
                 =>
                 {
                     if (!moviePostDictionary.TryGetValue(moviePostMapping.MoviePostId, out var currentMoviePost))
@@ -106,6 +123,12 @@ public class MoviePostRepository : IMoviePostRepository
                         currentMoviePost.Comments.Add(commentsMapping);
                     }
 
+                    if (commentsMapping != null && commentLikeMapping != null && !commentsMapping.CommentsLike.Any(l =>
+                        l.CommentId == commentLikeMapping.CommentId))
+                    {
+                        commentsMapping.CommentsLike.Add(commentLikeMapping);
+                    }
+
                     if (castMemberMapping != null && !currentMoviePost.Cast.Any(cast =>
                     cast.CastMemberId == castMemberMapping.CastMemberId))
                     {
@@ -114,20 +137,20 @@ public class MoviePostRepository : IMoviePostRepository
 
                     return currentMoviePost;
                 },
-                splitOn: "CommentId, CastMemberId"
+                splitOn: "CommentId, CastMemberId, CommentLikeId"
                 );
 
             return moviePostDictionary.Values;
         }
     }
 
-    public async Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId, string identityUserId, 
+    public async Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId, string identityUserId,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string query = @"SELECT mr.RatingId, mr.IdentityUserId, mr.Rating, c.CommentId, c.RatingId,
-                c.IdentityUserId, c.Content 
+        string query = @"SELECT mr.RatingId, mr.IdentityUserId, mr.Rating, 
+                 c.CommentId, c.*
                 FROM MovieRating mr
                 LEFT JOIN
                      Comment c ON mr.RatingId = c.RatingId
@@ -143,7 +166,7 @@ public class MoviePostRepository : IMoviePostRepository
                         rating.Comment = comment;
                     }
                     return rating;
-                }, new {RatingId = ratingId, IdentityUserId = identityUserId},
+                }, new { RatingId = ratingId, IdentityUserId = identityUserId },
                 splitOn: "RatingId")).FirstOrDefault();
 
             return movieRating;
@@ -160,7 +183,7 @@ public class MoviePostRepository : IMoviePostRepository
         MovieImagePath, MovieBackdropImagePath, MovieDescription, MovieCategory, Director, ReleaseDate, Runtime) 
         OUTPUT INSERTED.MoviePostId
         VALUES (@CreatorUserId, @MovieTitle, @MovieImage, @MovieBackdropImage, @MovieImagePath, 
-        @MovieBackdropImagePath, @MovieDescription, @MovieCategory, @Director, @ReleaseDate, @Runtime);";
+        @MovieBackdropImagePath, @MovieDescription, @MovieCategory, @Director, @ReleaseDate, @Runtime)";
 
         using (var connection = _dapperContext.CreateConnection())
         {
@@ -245,6 +268,26 @@ public class MoviePostRepository : IMoviePostRepository
                 comment.RatingId,
                 comment.IdentityUserId,
                 comment.Content
+            });
+
+            return true;
+        }
+    }
+
+    public async Task<bool> CreateCommentLikeAsync(Guid commentId, string identityUserId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"INSERT INTO CommentLike (CommentId, IdentityUserId) 
+        VALUES (@CommentId, @IdentityUserId)";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                CommentId = commentId,
+                IdentityUserId = identityUserId,
             });
 
             return true;
@@ -378,6 +421,23 @@ public class MoviePostRepository : IMoviePostRepository
             await connection.QueryAsync(query, new
             {
                 RatingId = movieRatingId,
+            });
+
+            return true;
+        }
+    }
+
+    public async Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string query = @"DELETE FROM CommentLike WHERE LikeId = @LikeId";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new
+            {
+                LikeId = likeId,
             });
 
             return true;

@@ -1,0 +1,7 @@
+CREATE TABLE CommentLike (
+    LikeId UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+	IdentityUserId NVARCHAR(450) NOT NULL,
+    CommentId UNIQUEIDENTIFIER NOT NULL,
+	CONSTRAINT FK_CommentLike_UserIdentity FOREIGN KEY (IdentityUserId) REFERENCES dbo.AspNetUsers(Id),
+	CONSTRAINT FK_CommentLike_Comment FOREIGN KEY (CommentId) REFERENCES dbo.Comment(CommentId),
+);

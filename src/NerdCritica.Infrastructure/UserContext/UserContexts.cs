@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using NerdCritica.Domain.Contracts;
 using NerdCritica.Infrastructure.Extensions;
-
 
 namespace NerdCritica.Infrastructure.UserContext;
 
