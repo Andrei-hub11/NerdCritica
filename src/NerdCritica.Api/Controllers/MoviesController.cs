@@ -163,7 +163,7 @@ public class MoviesController : ControllerBase
 
     [Authorize]
     [HttpDelete("delete-like/{likeId}")]
-    public async Task<IActionResult> UpdateLikeDecrement(Guid likeId,
+    public async Task<IActionResult> DeleteLike(Guid likeId,
     CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)

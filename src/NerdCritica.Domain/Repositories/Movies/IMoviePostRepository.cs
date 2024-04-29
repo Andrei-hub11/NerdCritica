@@ -9,8 +9,10 @@ public interface IMoviePostRepository
 {
     Task<MoviePostMapping?> GetMoviePostByIdAsync(Guid moviePostId, CancellationToken cancellationToken);
     Task<IEnumerable<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken);
-    Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId, string identityUserId,
+    Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId,
        CancellationToken cancellationToken);
+    Task<CommentLikeMapping?> GetCommentLikeByIdAsync(Guid likeId,
+    CancellationToken cancellationToken);
     Task<Guid> CreateMoviePostAsync(MoviePost moviePost, CancellationToken cancellationToken);
     Task<bool> CreateCastMovieAsync(List<CastMember> castMovie, Guid moviePostId);
     Task<Guid> CreateRatingAsync(MovieRating rating, CancellationToken cancellationToken);

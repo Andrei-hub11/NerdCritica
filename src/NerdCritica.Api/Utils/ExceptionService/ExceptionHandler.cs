@@ -30,10 +30,17 @@ public class ExceptionHandler : IExceptionHandler
             {
                 Error = ex,
             };
+
+            var responseMessage = JsonConvert.SerializeObject(new
+            {
+                Message = "Desculpe. Algo deu errado por aqui.",
+            });
+
             context.Features.Set((ErrorHandlerFeature?)errorHandlerFeature);
             context.Response.StatusCode = 500;
             context.Response.Headers.Clear();
 
+            await context.Response.WriteAsync(responseMessage);
             await _options.ErrorHandler(context);
             return;
         }

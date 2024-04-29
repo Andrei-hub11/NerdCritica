@@ -184,28 +184,24 @@ private readonly IUserContext _userContext;
         }
     }
 
-    public async Task<bool> CreateCommentLikeAsync(CreateCommentLikeRequestDTO commentLike,
+    public async Task<bool> CreateCommentLikeAsync(CreateCommentLikeRequestDTO commentLikeRequest,
     CancellationToken cancellationToken)
     {
         try
         {
-            var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(commentLike.RatingId,
-                commentLike.CommentAuthorId, cancellationToken);
+            var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(commentLikeRequest.RatingId,
+                cancellationToken);
 
-            if (movieRatingExist == null)
+            ThrowHelper.ThrowNotFoundExceptionIfNull(movieRatingExist, $"A avalição com o id {commentLikeRequest.RatingId} não foi encontrada.");
+
+            if (movieRatingExist.Comment.CommentId != commentLikeRequest.CommentId)
             {
-                throw new NotFoundException($"A avaliação não foi encontrada, verifique o id da avaliação" +
-                    $" {commentLike.RatingId} e o id de usuário ${commentLike.IdentityUserId}.");
+                throw new BadRequestException($"O id de comentário {commentLikeRequest.CommentId} " +
+                    $"não está presente na avaliação de id {commentLikeRequest.RatingId}.");
             }
 
-            if(movieRatingExist.Comment.CommentId == commentLike.CommentId)
-            {
-                throw new BadRequestException($"O id de comentário {commentLike.CommentId} " +
-                    $"não está presente na avaliação de id ${commentLike.RatingId}.");
-            }
-
-            bool isUpdated = await _moviePostRepository.CreateCommentLikeAsync(commentLike.CommentId,
-                commentLike.IdentityUserId, cancellationToken);
+            bool isUpdated = await _moviePostRepository.CreateCommentLikeAsync(commentLikeRequest.CommentId,
+                commentLikeRequest.IdentityUserId, cancellationToken);
 
             return isUpdated;
         }
@@ -222,12 +218,9 @@ private readonly IUserContext _userContext;
         {
             var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId, 
                 cancellationToken);
-            
-            if(moviePostExist == null)
-            {
-             throw new NotFoundException($"O post de filme com o id {moviePostId} não foi encontrado.");
-            }
-            
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(moviePostExist, $"A postagem de filme com o id {moviePostId} não foi encontrada.");
+
             var updatedMoviePost = MoviePost.From(postImages.MovieImagePath, postImages.MovieBackdropPath,
                 postImages.MovieImageBytes, postImages.MovieBackdropBytes, moviePost.MovieTitle, 
                 moviePost.MovieDescription, moviePost.MovieCategory, moviePost.Director, 
@@ -261,13 +254,10 @@ private readonly IUserContext _userContext;
     {
        try
         {
-            var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(movieRatingId, 
-                movieRating.IdentityUserId, cancellationToken);
+            var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(movieRatingId
+                , cancellationToken);
 
-            if (movieRating == null)
-            {
-                throw new NotFoundException($"A avaliação com o id {movieRatingId} não foi encontrado.");
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(movieRatingExist, $"A avalição com o id {movieRatingId} não foi encontrada.");
 
             var updatedMovieRating = MovieRating.From(movieRating.IdentityUserId, movieRating.Rating);
 
@@ -303,6 +293,10 @@ private readonly IUserContext _userContext;
     {
        try
         {
+            var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(moviePostExist, $"A postagem de filme com o id {moviePostId} não foi encontrada.");
+
             bool isDeleted = await _moviePostRepository.DeleteMoviePostAsync(moviePostId, cancellationToken);
 
             return isDeleted;
@@ -316,6 +310,10 @@ private readonly IUserContext _userContext;
     {
         try
         {
+            var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(movieRatingId, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(movieRatingExist, $"A avalição com o id {movieRatingId} não foi encontrada.");
+
             bool isDeleted = await _moviePostRepository.
                 DeleteMovieRatingAsync(movieRatingId, cancellationToken);
 
@@ -329,8 +327,11 @@ private readonly IUserContext _userContext;
 
     public async Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken)
     {
-        try
-        {
+        try {
+       
+            var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(likeId, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(likeExist, $"O like com o id {likeId} não foi encontrado.");
 
             bool isDeleted = await _moviePostRepository.DeleteCommentLikeAsync(likeId, cancellationToken);
 
