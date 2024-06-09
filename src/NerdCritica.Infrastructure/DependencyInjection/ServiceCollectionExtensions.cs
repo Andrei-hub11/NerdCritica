@@ -13,7 +13,7 @@ namespace NerdCritica.Infrastructure.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddUserContext(this IServiceCollection services,
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
         ConfigurationManager configuration)
     {
         services.AddScoped<IUserContext, UserContexts>();

@@ -18,5 +18,5 @@ public interface IMoviePostService
         CancellationToken cancellationToken);
     Task<bool> DeleteMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken);
     Task<bool> DeleteMovieRatingAsync(Guid movieRatingId, CancellationToken cancellationToken);
-    Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken);
+    Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest, CancellationToken cancellationToken);
 }

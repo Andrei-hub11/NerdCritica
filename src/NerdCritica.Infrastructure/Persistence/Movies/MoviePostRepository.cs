@@ -1,5 +1,7 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Identity;
 using NerdCritica.Domain.DTOs.MappingsDapper;
+using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;
@@ -195,19 +197,20 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public async Task<CommentLikeMapping?> GetCommentLikeByIdAsync(Guid likeId,
+    public async Task<CommentLikeMapping?> GetCommentLikeByIdAsync(DeleteLikeRequestDTO deleteLikeRequest,
     CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string query = @"SELECT * FROM CommentLike
-                WHERE LikeId = @LikeId";
+                WHERE CommentId = @CommentId AND IdentityUserId = @IdentityUserId";
 
         using (var connection = _dapperContext.CreateConnection())
         {
             var commentLike = await connection.QueryFirstOrDefaultAsync<CommentLikeMapping>(query, new
             {
-                LikeId = likeId
+                deleteLikeRequest.CommentId,
+                deleteLikeRequest.IdentityUserId
             });
 
             return commentLike;
@@ -469,17 +472,20 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public async Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest,
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string query = @"DELETE FROM CommentLike WHERE LikeId = @LikeId";
+        string query = @"DELETE FROM CommentLike 
+        WHERE CommentId = @CommentId AND IdentityUserId = @IdentityUserId";
 
         using (var connection = _dapperContext.CreateConnection())
         {
             await connection.QueryAsync(query, new
             {
-                LikeId = likeId,
+                deleteLikeRequest.CommentId,
+                deleteLikeRequest.IdentityUserId
             });
 
             return true;

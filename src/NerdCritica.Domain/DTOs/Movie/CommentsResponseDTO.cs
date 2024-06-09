@@ -2,5 +2,5 @@
 
 namespace NerdCritica.Domain.DTOs.Movie;
 
-public record CommentsResponseDTO (Guid CommentId, Guid RatingId, string IdentityUserId, string Content,
-    int LikeCount, bool LikedByCurrentUser);
+public record CommentsResponseDTO (Guid CommentId, Guid RatingId, string IdentityUserId, string Content, 
+    ICollection<CommentLikeResponseDTO> commentsLike);

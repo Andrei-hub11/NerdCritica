@@ -7,6 +7,7 @@ using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
+using System.Data;
 
 
 namespace NerdCritica.Application.Services.User;
@@ -43,7 +44,7 @@ public class UserService : IUserService
 
             if (userContextCreation.IsFailure || userContextCreation.Value.UserId == string.Empty)
             {
-                var exception = ExceptionMapper.GetExceptionFromResult(userContextCreation);
+                var exception = CreateUserErrorHelper.GetExceptionFromResult(userContextCreation);
                 if (exception != null)
                 {
                     throw exception;
@@ -52,22 +53,14 @@ public class UserService : IUserService
 
             var userCreated = await _userRepository.GetUserByIdAsync(userContextCreation.Value.UserId, cancellationToken);
 
-            if (userCreated.IsFailure)
-            {
-                var errorMessages = userCreated.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(userCreated, $"O usúario com id {userContextCreation.Value.UserId} não foi encontrado");
 
-            var userDTO = _mapper.Map<ProfileUserResponseDTO>(userCreated.Value);
-            var role = await _userRepository.GetUserRoleAsync(userCreated.Value.IdentityUserId, cancellationToken);
+            var userDTO = _mapper.Map<ProfileUserResponseDTO>(userCreated);
+            var role = await _userRepository.GetUserRoleAsync(userCreated.IdentityUserId, cancellationToken);
 
-            if (role.Value == string.Empty)
-            {
-                var errorMessages = role.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {userCreated.IdentityUserId} não foi encontrado");
 
-            return new AuthOperationResponseDTO(userContextCreation.Value.Token, userDTO, role.Value);
+            return new AuthOperationResponseDTO(userContextCreation.Value.Token, userDTO, role);
 
         }
         catch (Exception)
@@ -83,13 +76,9 @@ public class UserService : IUserService
         {
             var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
 
-            if (user.IsFailure)
-            {
-                var errorMessages = user.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(user, $"O usúario com id {userId} não foi encontrado");
 
-            var userDTO = _mapper.Map<ProfileUserResponseDTO>(user.Value);
+            var userDTO = _mapper.Map<ProfileUserResponseDTO>(user);
             return userDTO;
         }
         catch (Exception)
@@ -138,13 +127,9 @@ public class UserService : IUserService
 
             var role = await _userRepository.GetUserRoleAsync(userContextLogin.Value.User.IdentityUserId, cancellationToken);
 
-            if (role.Value == string.Empty)
-            {
-                var errorMessages = role.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {userContextLogin.Value.User.IdentityUserId} não foi encontrado");
 
-            return new AuthOperationResponseDTO(userContextLogin.Value.Token, userDTO, role.Value);
+            return new AuthOperationResponseDTO(userContextLogin.Value.Token, userDTO, role);
 
         }
         catch (Exception)
@@ -161,11 +146,7 @@ public class UserService : IUserService
             var user = await _userRepository.GetUserByIdAsync(addFavoriteMovieRequestDTO.IdentityUserId,
                 cancellationToken);
 
-            if (user.IsFailure)
-            {
-                var errorMessages = user.Errors.Select(error => error.Description).ToList();
-                throw new NotFoundException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(user, $"O usúario com id {addFavoriteMovieRequestDTO.IdentityUserId} não foi encontrado");
 
             var favoriteMovie = await _userRepository.GetFavoriteMovies(addFavoriteMovieRequestDTO.IdentityUserId,
                 cancellationToken);
@@ -182,10 +163,7 @@ public class UserService : IUserService
             var movie = await _moviePostRepository.GetMoviePostByIdAsync(addFavoriteMovieRequestDTO.MoviePostId,
                 cancellationToken);
 
-            if (movie == null)
-            {
-                throw new NotFoundException($"O post de filme com o id {addFavoriteMovieRequestDTO.MoviePostId} não existe.");
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(movie, $"O post de filme com o id {addFavoriteMovieRequestDTO.MoviePostId} não existe.");
 
             var favoriteMovieValited = FavoriteMovie.Create(addFavoriteMovieRequestDTO.MoviePostId, 
                 addFavoriteMovieRequestDTO.IdentityUserId);
@@ -221,16 +199,12 @@ public class UserService : IUserService
 
             var userByEmail = await _userRepository.GetUserByEmailAsync(userDTO.Email, cancellationToken);
 
-            if (userByEmail.Success && userByEmail.Value.IdentityUserId != userId)
+            ThrowHelper.ThrowNotFoundExceptionIfNull(userByEmail, $"O usúario com email {userDTO.Email} não foi encontrado");
+
+            if (userByEmail.IdentityUserId != userId)
             {
                 throw new ValidationException("Não é possivel atualizar para o email fornecido, " +
                     "pois já existe para outro usuário.");
-            }
-
-            if (userByEmail.IsFailure)
-            {
-                var errorMessages = userByEmail.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
             }
 
             var isUpdated = await _userRepository.UpdateUserAsync(validatedUser.Value, userId, cancellationToken);
@@ -242,13 +216,9 @@ public class UserService : IUserService
 
             var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
 
-            if (user.IsFailure)
-            {
-                var errorMessages = user.Errors.Select(error => error.Description).ToList();
-                throw new BadRequestException(string.Join(", ", errorMessages));
-            }
+            ThrowHelper.ThrowNotFoundExceptionIfNull(user, $"O usúario com id {userId} não foi encontrado");
 
-            var userUpdated = _mapper.Map<ProfileUserResponseDTO>(user.Value);
+            var userUpdated = _mapper.Map<ProfileUserResponseDTO>(user);
             return userUpdated;
 
         } catch (Exception)

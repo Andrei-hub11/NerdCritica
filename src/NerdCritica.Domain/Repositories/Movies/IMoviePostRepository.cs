@@ -11,7 +11,7 @@ public interface IMoviePostRepository
     Task<IEnumerable<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken);
     Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId,
        CancellationToken cancellationToken);
-    Task<CommentLikeMapping?> GetCommentLikeByIdAsync(Guid likeId,
+    Task<CommentLikeMapping?> GetCommentLikeByIdAsync(DeleteLikeRequestDTO deleteLikeRequest,
     CancellationToken cancellationToken);
     Task<Guid> CreateMoviePostAsync(MoviePost moviePost, CancellationToken cancellationToken);
     Task<bool> CreateCastMovieAsync(List<CastMember> castMovie, Guid moviePostId);
@@ -26,5 +26,5 @@ public interface IMoviePostRepository
     Task<bool> UpdateCommentAsync(Comment comment, Guid movieRatingId);
     Task<bool> DeleteMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken);
     Task<bool> DeleteMovieRatingAsync(Guid movieRatingId, CancellationToken cancellationToken);
-    Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken);
+    Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest, CancellationToken cancellationToken);
 }

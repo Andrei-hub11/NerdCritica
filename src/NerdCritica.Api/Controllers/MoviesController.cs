@@ -162,8 +162,8 @@ public class MoviesController : ControllerBase
     }
 
     [Authorize]
-    [HttpDelete("delete-like/{likeId}")]
-    public async Task<IActionResult> DeleteLike(Guid likeId,
+    [HttpDelete("delete-like")]
+    public async Task<IActionResult> DeleteLike(DeleteLikeRequestDTO deleteLikeRequest,
     CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -171,7 +171,7 @@ public class MoviesController : ControllerBase
             return StatusCode(499);
         }
 
-        var isUpdated = await _postService.DeleteCommentLikeAsync(likeId, cancellationToken);
+        var isUpdated = await _postService.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken);
 
         return Ok(new { Success = isUpdated });
     }

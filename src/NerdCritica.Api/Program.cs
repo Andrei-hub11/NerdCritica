@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddUserContext(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddGeneralServices();
 builder.Services.AddCustomIdentity();
 builder.Services.AddCustomAuthorization();

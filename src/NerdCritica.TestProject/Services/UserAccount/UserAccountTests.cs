@@ -14,7 +14,7 @@ using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
 
-namespace NerdCritica.TestProject.Controllers.UserAccount;
+namespace NerdCritica.TestProject;
 
 public class UserAccountTests
 {
@@ -39,7 +39,7 @@ public class UserAccountTests
             UserName = "testUser", Email = "test@example.com", ProfileImagePath = "profile.jpg" };
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(IdentityUserId, cancellationToken))
-                          .ReturnsAsync(Result.Ok(expectedUser));
+                          .ReturnsAsync(expectedUser);
 
         var expectedProfileDTO = new ProfileUserResponseDTO(Id: UserId, IdentityUserId: IdentityUserId,
             UserName: "testUser", Email: "test@example.com", ProfileImagePath: "profile.jpg");
@@ -56,7 +56,7 @@ public class UserAccountTests
     }
 
     [Fact]
-    public void GetUserByIdAsync_UserNotFound_ThrowsBadRequestException()
+    public void GetUserByIdAsync_UserNotFound_ThrowsNotFoundException()
     {
         var userId = "nonExistentUser";
         var cancellationToken = CancellationToken.None;
@@ -66,11 +66,10 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(userId, cancellationToken))
-                          .ReturnsAsync(Result.Fail($"O usúario com id {userId} não foi encontrado", 
-                          new UserMapping()));
+                          .ReturnsAsync(() => null);
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object, mapperMock.Object);
 
-        Assert.ThrowsAsync<BadRequestException>(() => userService.GetUserByIdAsync(userId, cancellationToken));
+        Assert.ThrowsAsync<NotFoundException>(() => userService.GetUserByIdAsync(userId, cancellationToken));
     }
 
     [Fact]
@@ -168,16 +167,16 @@ public class UserAccountTests
                           .ReturnsAsync(Result.Ok(new UserCreationTokenAndId(expectedUserId, expectedToken)));
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(expectedUserId, cancellationToken))
-                         .ReturnsAsync(Result.Ok(new UserMapping
+                         .ReturnsAsync(new UserMapping
                          {
                              Id = idGuid,
                              IdentityUserId = expectedUserId, // Assuming IdentityUserId is same as expectedUserId
                              UserName = expectedUserName,
                              Email = expectedEmail
-                         }));
+                         });
 
         userRepositoryMock.Setup(repo => repo.GetUserRoleAsync(expectedUserId, cancellationToken))
-            .ReturnsAsync(Result.Ok(expectedRole));
+            .ReturnsAsync(expectedRole);
 
         var imagePath = "profile.jpg";
         var mapperMock = new Mock<IMapper>();
@@ -279,7 +278,7 @@ public class UserAccountTests
                   .Returns(new ProfileUserResponseDTO(Id: UserId, IdentityUserId: IdentityUserId, UserName: "testUser",
                       Email: "test@example.com", ProfileImagePath: imagePath));
         userRepositoryMock.Setup(repo => repo.GetUserRoleAsync(expectedUser.Id, cancellationToken))
-                          .ReturnsAsync(Result.Ok(expectedRole));
+                          .ReturnsAsync(expectedRole);
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object, mapperMock.Object);
         
@@ -339,7 +338,7 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
-                          .ReturnsAsync(Result.Ok(new UserMapping {}));
+                          .ReturnsAsync(new UserMapping { });
 
         var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
         moviePostRepositoryMock.Setup(repo => repo.GetMoviePostByIdAsync(addFavoriteMovieRequestDTO.MoviePostId, cancellationToken))
@@ -358,7 +357,7 @@ public class UserAccountTests
     }
 
     [Fact]
-    public async Task AddFavoriteMovieAsync_UserNotFound_ThrowsBadRequestException()
+    public async Task AddFavoriteMovieAsync_UserNotFound_ThrowsNotFoundException()
     {
         var addFavoriteMovieRequestDTO = new AddFavoriteMovieRequestDTO
         (
@@ -370,7 +369,7 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
-                          .ReturnsAsync(Result.Fail("O usúario com id userId123 não foi encontrado", new UserMapping()));
+                          .ReturnsAsync(() => null);
 
         var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
         moviePostRepositoryMock.Setup(repo => repo.GetMoviePostByIdAsync(Guid.NewGuid(), cancellationToken))
@@ -410,7 +409,7 @@ public class UserAccountTests
     }
 
     [Fact]
-    public async Task AddFavoriteMovieAsync_MoviePostNotFound_ThrowsBadRequestException()
+    public async Task AddFavoriteMovieAsync_MoviePostNotFound_ThrowsNotFoundException()
     {
         var addFavoriteMovieRequestDTO = new AddFavoriteMovieRequestDTO
         (
@@ -421,7 +420,7 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
-                          .ReturnsAsync(Result.Ok(new UserMapping()));
+                          .ReturnsAsync(() => null);
 
         var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
         moviePostRepositoryMock.Setup(repo => repo.GetMoviePostByIdAsync(Guid.NewGuid(), cancellationToken))
@@ -436,7 +435,7 @@ public class UserAccountTests
     }
 
     [Fact]
-    public async Task AddFavoriteMovieAsync_MovieAlreadyFavorited_ThrowsBadRequestException()
+    public async Task AddFavoriteMovieAsync_MovieAlreadyFavorited_ThrowsNotFoundException()
     {
         var addFavoriteMovieRequestDTO = new AddFavoriteMovieRequestDTO
         (
@@ -447,7 +446,7 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
-                          .ReturnsAsync(Result.Ok(new UserMapping()));
+                          .ReturnsAsync(() => null);
 
         userRepositoryMock.Setup(repo => repo.GetFavoriteMovies(addFavoriteMovieRequestDTO.IdentityUserId, cancellationToken))
                          .ReturnsAsync(new List<FavoriteMovieMapping>
@@ -463,7 +462,7 @@ public class UserAccountTests
 
         var userService = new UserService(userRepositoryMock.Object, moviePostRepositoryMock.Object, mapperMock.Object);
 
-        await Assert.ThrowsAsync<BadRequestException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken));
     }
 

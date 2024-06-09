@@ -27,7 +27,7 @@ public class UserRepository : IUserRepository
         _configuration = configuration;
     }
 
-    public async Task<Result<UserMapping>> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
+    public async Task<UserMapping?> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -41,17 +41,11 @@ public class UserRepository : IUserRepository
             var result = await connection.QueryFirstOrDefaultAsync<UserMapping>(new CommandDefinition(selectQuery,
                 new { UserId = userId }, cancellationToken: cancellationToken));
 
-            if (result == null)
-            {
-                return Result.Fail($"O usúario com id {userId} não foi encontrado",
-                  new UserMapping());
-            }
-
-            return Result.Ok(result);
+            return result;
         }
     }
 
-    public async Task<Result<UserMapping>> GetUserByEmailAsync(string userEmail, CancellationToken cancellationToken)
+    public async Task<UserMapping?> GetUserByEmailAsync(string userEmail, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -65,17 +59,11 @@ public class UserRepository : IUserRepository
             var result = await connection.QueryFirstOrDefaultAsync<UserMapping>(new CommandDefinition(selectQuery,
                 new { UserEmail = userEmail }, cancellationToken: cancellationToken));
 
-            if (result == null)
-            {
-                return Result.Fail($"O usúario com email {userEmail} não foi encontrado",
-                  new UserMapping());
-            }
-
-            return Result.Ok(result);
+            return result;
         }
     }
     
-    public async Task<Result<string>> GetUserRoleAsync(string userId, CancellationToken cancellationToken)
+    public async Task<string?> GetUserRoleAsync(string userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -90,12 +78,7 @@ public class UserRepository : IUserRepository
             var role = await connection.QueryFirstOrDefaultAsync<string>(new CommandDefinition(query,
                 new { UserId = userId }, cancellationToken: cancellationToken));
 
-            if (role == null)
-            {
-                return Result.Fail($"O role do usúario com id {userId} não foi encontrado", string.Empty);
-            }
-
-            return Result.Ok(role);
+            return role;
         }
     }
 
@@ -184,7 +167,7 @@ public class UserRepository : IUserRepository
         var user = await GetUserByIdAsync(identityUser.Id, cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
 
-        return Result.Ok(new UserLogin(token, user.Value));
+        return Result.Ok(new UserLogin(token, user));
     }
 
     public async Task<bool> AddFavoriteMovieAsync(FavoriteMovie favoriteMovie, CancellationToken cancellationToken)

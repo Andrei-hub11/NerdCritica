@@ -1,7 +1,6 @@
 ﻿using NerdCritica.Api.Utils.ExceptionService;
 using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Domain.Utils.Exceptions;
-using System;
 
 namespace NerdCritica.Api.Extensions;
 
@@ -80,17 +79,6 @@ public class ErrorHandlerMiddleware
                 throw;
             }
             await _exceptionHandler.HandleCreateUserException(context, ex);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 401));
-            if (context.Response.HasStarted)
-            {
-                _logger.LogWarning("A resposta já foi iniciada, " +
-      "o manipulador de erros não será executado.");
-                throw;
-            }
-            await _exceptionHandler.HandleUnauthorizedAccessException(context, ex);
         }
         catch (Exception ex)
         {

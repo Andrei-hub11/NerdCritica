@@ -1,13 +1,12 @@
 ﻿using AutoMapper;
 using NerdCritica.Domain.Common;
-using NerdCritica.Domain.Contracts;
 using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
-using System.Threading;
+using System.Text;
 
 namespace NerdCritica.Application.Services.Movies;
 
@@ -17,13 +16,11 @@ public class MoviePostService : IMoviePostService
 
 private readonly IMoviePostRepository _moviePostRepository;
 private readonly IMapper _mapper;
-private readonly IUserContext _userContext;
 
-    public MoviePostService(IMoviePostRepository moviePostRepository, IMapper mapper, IUserContext userContext)
+    public MoviePostService(IMoviePostRepository moviePostRepository, IMapper mapper)
     {
         _moviePostRepository = moviePostRepository;
         _mapper = mapper;
-        _userContext = userContext;
     }
 
     public async Task<MoviePostResponseDTO> GetMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken)
@@ -34,36 +31,9 @@ private readonly IUserContext _userContext;
 
             _ = movie ?? throw new NotFoundException($"A postagem de filme com o id {moviePostId} não foi encontrada.");
 
-            var movieMapping = new MoviePostResponseDTO(
-             MoviePostId: movie.MoviePostId,
-             MovieImagePath: movie.MovieImagePath,
-             MovieBackdropImagePath: movie.MovieBackdropImagePath,
-             MovieTitle: movie.MovieTitle,
-             MovieDescription: movie.MovieDescription,
-             Rating: movie.Rating,
-             Comments: movie.Comments.Select(comment => new CommentsResponseDTO(
-             CommentId: comment.CommentId,
-             RatingId: comment.RatingId,
-             IdentityUserId: comment.IdentityUserId,
-             Content: comment.Content,
-             LikeCount: comment.CommentsLike.Count,
-             LikedByCurrentUser: comment.CommentsLike.Any(l => l.IdentityUserId
-             == _userContext.UserId.ToString())
-              )).ToList(),
-              MovieCategory: movie.MovieCategory,
-              Director: movie.Director,
-              ReleaseDate: movie.ReleaseDate,
-              Runtime: FormatHelper.FormatRuntime(movie.Runtime),
-              Cast: movie.Cast.Select(cast => new CastMemberResponseDTO(
-              CastMemberId: cast.CastMemberId,
-              MemberName: cast.MemberName,
-              CharacterName: cast.CharacterName,
-              MemberImagePath: cast.MemberImagePath,
-              RoleInMovie: cast.RoleInMovie,
-              RoleType: cast.RoleType)).ToList()
-             );
+            var movieDTO = _mapper.Map<MoviePostResponseDTO>(movie);
 
-            return movieMapping;
+            return movieDTO;
         } catch
         {
             throw;
@@ -76,43 +46,9 @@ private readonly IUserContext _userContext;
 
        var movies = await _moviePostRepository.GetMoviePostsAsync(cancellationToken);
 
-        var moviesMapping = new List<MoviePostResponseDTO>();
+       var moviesDTOs = _mapper.Map<IEnumerable<MoviePostResponseDTO>>(movies).ToList();
 
-        foreach (var movie in movies)
-        {
-            var movieMapping = new MoviePostResponseDTO(
-                MoviePostId: movie.MoviePostId,
-                MovieImagePath: movie.MovieImagePath,
-                MovieBackdropImagePath: movie.MovieBackdropImagePath,
-                MovieTitle: movie.MovieTitle,
-                MovieDescription: movie.MovieDescription,
-                Rating: movie.Rating,
-                Comments: movie.Comments.Select(comment => new CommentsResponseDTO(
-                CommentId: comment.CommentId,
-                RatingId: comment.RatingId,
-                IdentityUserId: comment.IdentityUserId,
-                Content: comment.Content,
-                LikeCount: comment.CommentsLike.Count,
-                LikedByCurrentUser: comment.CommentsLike.Any(l => l.IdentityUserId
-                == _userContext.UserId.ToString())
-                 )).ToList(),
-                 MovieCategory: movie.MovieCategory,
-                 Director: movie.Director,
-                 ReleaseDate: movie.ReleaseDate,
-                 Runtime: FormatHelper.FormatRuntime(movie.Runtime),
-                 Cast: movie.Cast.Select(cast => new CastMemberResponseDTO(
-                 CastMemberId: cast.CastMemberId,
-                 MemberName: cast.MemberName,
-                 CharacterName: cast.CharacterName,
-                 MemberImagePath: cast.MemberImagePath,
-                 RoleInMovie: cast.RoleInMovie,
-                 RoleType: cast.RoleType )).ToList()
-                );
-
-            moviesMapping.Add(movieMapping);
-        }
-
-        return moviesMapping;
+       return moviesDTOs;
     }
 
     public async Task<bool> CreateMoviePostAsync(CreateMoviePostRequestDTO moviePost, MovieImages postImages,
@@ -325,15 +261,21 @@ private readonly IUserContext _userContext;
         }
     }
 
-    public async Task<bool> DeleteCommentLikeAsync(Guid likeId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest, 
+        CancellationToken cancellationToken)
     {
         try {
        
-            var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(likeId, cancellationToken);
+            var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(deleteLikeRequest, cancellationToken);
 
-            ThrowHelper.ThrowNotFoundExceptionIfNull(likeExist, $"O like com o id {likeId} não foi encontrado.");
+            StringBuilder message = new StringBuilder();
+            message.Append("O like não foi encontrado. ");
+            message.Append($"Verifique se {deleteLikeRequest.CommentId} e {deleteLikeRequest.IdentityUserId} ");
+            message.Append("estão corretos.");
 
-            bool isDeleted = await _moviePostRepository.DeleteCommentLikeAsync(likeId, cancellationToken);
+            ThrowHelper.ThrowNotFoundExceptionIfNull(likeExist, message.ToString());
+
+            bool isDeleted = await _moviePostRepository.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken);
 
             return isDeleted;
         }

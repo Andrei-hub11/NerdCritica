@@ -11,6 +11,6 @@ public record MoviePostResponseDTO(
     string MovieCategory,
     string Director,
     DateTime ReleaseDate, 
-    string Runtime,
+    TimeSpan Runtime,
     ICollection<CastMemberResponseDTO> Cast
 );
