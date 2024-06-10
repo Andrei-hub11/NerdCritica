@@ -1,6 +1,4 @@
-﻿
-
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -22,8 +20,8 @@ public class UserAccountTests
     [Fact]
     public async Task GetUserByIdAsync_UserFound_ReturnsUserProfile()
     {
-        var IdentityUserId = "user123";
-        var UserId = Guid.NewGuid();
+        var identityUserId = "user123";
+        var userId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
         var userRepositoryMock = new Mock<IUserRepository>();
@@ -35,21 +33,21 @@ public class UserAccountTests
 
         var mapper = new Mapper(configuration);
 
-        var expectedUser = new UserMapping { Id = UserId, IdentityUserId = IdentityUserId, 
+        var expectedUser = new UserMapping { Id = userId, IdentityUserId = identityUserId, 
             UserName = "testUser", Email = "test@example.com", ProfileImagePath = "profile.jpg" };
 
-        userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(IdentityUserId, cancellationToken))
+        userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(identityUserId, cancellationToken))
                           .ReturnsAsync(expectedUser);
 
-        var expectedProfileDTO = new ProfileUserResponseDTO(Id: UserId, IdentityUserId: IdentityUserId,
+        var expectedProfileDTO = new ProfileUserResponseDTO(Id: userId, IdentityUserId: identityUserId,
             UserName: "testUser", Email: "test@example.com", ProfileImagePath: "profile.jpg");
       
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object, mapper);
 
-        var result = await userService.GetUserByIdAsync(IdentityUserId, cancellationToken);
+        var result = await userService.GetUserByIdAsync(identityUserId, cancellationToken);
 
         Assert.NotNull(result);
-        Assert.Equal(IdentityUserId, result.IdentityUserId);
+        Assert.Equal(identityUserId, result.IdentityUserId);
         Assert.Equal("testUser", result.UserName);
         Assert.Equal("test@example.com", result.Email);
         Assert.Equal("profile.jpg", result.ProfileImagePath);
@@ -256,8 +254,8 @@ public class UserAccountTests
         // Arrange
         var userLoginRequestDTO = new UserLoginRequestDTO( Email: "test@example.com", Password: "password123");
         var cancellationToken = CancellationToken.None;
-        var UserId = Guid.NewGuid();
-        var IdentityUserId = "user123";
+        var userId = Guid.NewGuid();
+        var identityUserId = "user123";
         var imagePath = "profile.jpg";
 
         var userRepositoryMock = new Mock<IUserRepository>();
@@ -266,16 +264,16 @@ public class UserAccountTests
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
         var configurationMock = new Mock<IConfiguration>();
-        var expectedUser = new IdentityUser { Id = IdentityUserId, UserName = "testUser", 
+        var expectedUser = new IdentityUser { Id = identityUserId, UserName = "testUser", 
             Email = "test@example.com" };
-        var expectedUserMapping = new UserMapping { Id = UserId, IdentityUserId = IdentityUserId, UserName = "testUser", 
+        var expectedUserMapping = new UserMapping { Id = userId, IdentityUserId = identityUserId, UserName = "testUser", 
             Email = "test@example.com" };
         var expectedToken = "token123";
         var expectedRole = "UserRole";
         userRepositoryMock.Setup(repo => repo.LoginUserAsync(userLoginRequestDTO, cancellationToken))
                          .ReturnsAsync(Result.Ok(new UserLogin(expectedToken, expectedUserMapping)));
         mapperMock.Setup(mapper => mapper.Map<ProfileUserResponseDTO>(expectedUserMapping))
-                  .Returns(new ProfileUserResponseDTO(Id: UserId, IdentityUserId: IdentityUserId, UserName: "testUser",
+                  .Returns(new ProfileUserResponseDTO(Id: userId, IdentityUserId: identityUserId, UserName: "testUser",
                       Email: "test@example.com", ProfileImagePath: imagePath));
         userRepositoryMock.Setup(repo => repo.GetUserRoleAsync(expectedUser.Id, cancellationToken))
                           .ReturnsAsync(expectedRole);
@@ -386,18 +384,18 @@ public class UserAccountTests
                                    Director = "J.J Abrams",
                                    ReleaseDate = new DateTime(2019, 12, 25),
                                    Runtime = 9495,
-                                   Cast = new List<CastMemberMapping>
-    {
-        new CastMemberMapping
-        {
-            CastMemberId = Guid.Parse("69f36d6a-2425-472f-8edc-8ff15d641bd1"),
-            MemberName = "Mark Hamill",
-            CharacterName = "Luke",
-            MemberImagePath = "movies/cast/e3b234a1-009a-4f12-81a4-410a40312214.jpg",
-            RoleInMovie = "Protagonista",
-            RoleType = 1
-        }
-    }
+                                                               Cast = new List<CastMemberMapping>
+                                {
+                                    new CastMemberMapping
+                                    {
+                                        CastMemberId = Guid.Parse("69f36d6a-2425-472f-8edc-8ff15d641bd1"),
+                                        MemberName = "Mark Hamill",
+                                        CharacterName = "Luke",
+                                        MemberImagePath = "movies/cast/e3b234a1-009a-4f12-81a4-410a40312214.jpg",
+                                        RoleInMovie = "Protagonista",
+                                        RoleType = 1
+                                    }
+                                }
                                });
 
         var mapperMock = new Mock<IMapper>();
@@ -465,6 +463,168 @@ public class UserAccountTests
         await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken));
     }
+
+    [Fact]
+    public async Task UpdateUserAsync_Success_CallsRepositoryMethodsCorrectly()
+    {
+        var updateUserRequestDTO = new UpdateUserRequestDTO(
+            Username: "exampleUsername",
+            Email: "example@example.com",
+            ProfileImage: "path/to/profile/image.jpg"
+        );
+
+        var cancellationToken = CancellationToken.None;
+        var userId = Guid.NewGuid().ToString();
+        byte[] profileImageBytes = new byte[0];
+        var imagePath = "profile.jpg";
+
+        var existingUser = new UserMapping
+        {
+            Id = Guid.NewGuid(),
+            IdentityUserId = userId,
+            UserName = "exampleUsername",
+            Email = "example@example.com",
+            ProfileImagePath = "path/to/profile/image.jpg"
+        };
+
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+        userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
+                          .ReturnsAsync(existingUser);
+        userRepositoryMock.Setup(repo => repo.UpdateUserAsync(It.IsAny<ExtensionUserIdentity>(), userId, cancellationToken))
+                          .ReturnsAsync(Result.Ok(true)); // Indique que a atualização foi bem-sucedida
+        userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(userId, cancellationToken))
+                          .ReturnsAsync(existingUser); // Retorne o usuário existente após a atualização
+
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<UserMapping, ProfileUserResponseDTO>();
+        });
+
+        var mapper = new Mapper(configuration);
+
+        var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
+
+        var userService = new UserService(userRepositoryMock.Object, moviePostRepositoryMock.Object, mapper);
+
+        var result = await userService.UpdateUserAsync(updateUserRequestDTO, userId, imagePath, 
+            profileImageBytes, cancellationToken);
+
+        // Assert
+        userRepositoryMock.Verify(repo => repo.GetUserByEmailAsync(updateUserRequestDTO.Email, cancellationToken), Times.Once);
+        userRepositoryMock.Verify(repo => repo.UpdateUserAsync(It.IsAny<ExtensionUserIdentity>(), userId, cancellationToken), Times.Once);
+        userRepositoryMock.Verify(repo => repo.GetUserByIdAsync(userId, cancellationToken), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_InvalidUserData_ThrowsValidationException()
+    {
+        var updateUserRequestDTO = new UpdateUserRequestDTO(
+            Username: "",
+            Email: "example@example.com",
+            ProfileImage: "path/to/profile/image.jpg"
+        );
+
+        var cancellationToken = CancellationToken.None;
+        var userId = Guid.NewGuid().ToString();
+        byte[] profileImageBytes = new byte[0];
+        var imagePath = "profile.jpg";
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<UserMapping, ProfileUserResponseDTO>();
+        });
+
+        var mapper = new Mapper(configuration);
+
+        var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
+
+        var userService = new UserService(userRepositoryMock.Object, moviePostRepositoryMock.Object, mapper);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            userService.UpdateUserAsync(updateUserRequestDTO, userId, imagePath, profileImageBytes, cancellationToken));
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_UserNotFoundByEmail_ThrowsNotFoundException()
+    {
+        var updateUserRequestDTO = new UpdateUserRequestDTO(
+            Username: "exampleUsername",
+            Email: "example@example.com",
+            ProfileImage: "path/to/profile/image.jpg"
+        );
+
+        var cancellationToken = CancellationToken.None;
+        var userId = Guid.NewGuid().ToString();
+        byte[] profileImageBytes = new byte[0];
+        var imagePath = "profile.jpg";
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+        userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
+                          .ReturnsAsync(() => null);
+
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<UserMapping, ProfileUserResponseDTO>();
+        });
+
+        var mapper = new Mapper(configuration);
+
+        var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
+
+        var userService = new UserService(userRepositoryMock.Object, moviePostRepositoryMock.Object, mapper);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(() =>
+            userService.UpdateUserAsync(updateUserRequestDTO, userId, imagePath, profileImageBytes, cancellationToken));
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_EmailAlreadyAssociatedWithAnotherUser_ThrowsValidationException()
+    {
+        var updateUserRequestDTO = new UpdateUserRequestDTO(
+            Username: "exampleUsername",
+            Email: "example@example.com",
+            ProfileImage: "path/to/profile/image.jpg"
+        );
+
+        var cancellationToken = CancellationToken.None;
+        var userId = Guid.NewGuid().ToString();
+        byte[] profileImageBytes = new byte[0];
+        var imagePath = "profile.jpg";
+
+        var existingUser = new UserMapping
+        {
+            Id = Guid.NewGuid(),
+            IdentityUserId = "anotherUserId",
+            UserName = "anotherUsername",
+            Email = "example@example.com", // E-mail já associado a outro usuário
+            ProfileImagePath = "path/to/another/profile/image.jpg"
+        };
+
+        var userRepositoryMock = new Mock<IUserRepository>();
+        userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
+                          .ReturnsAsync(existingUser);
+
+        var configuration = new MapperConfiguration(cfg =>
+        {
+            cfg.CreateMap<UserMapping, ProfileUserResponseDTO>();
+        });
+
+        var mapper = new Mapper(configuration);
+
+        var moviePostRepositoryMock = new Mock<IMoviePostRepository>();
+
+        var userService = new UserService(userRepositoryMock.Object, moviePostRepositoryMock.Object, mapper);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            userService.UpdateUserAsync(updateUserRequestDTO, userId, imagePath, profileImageBytes, cancellationToken));
+    }
+
 
     [Fact]
     public async Task RemoveFavoriteMovie_FavoriteMovieExists_ReturnsTrue()
