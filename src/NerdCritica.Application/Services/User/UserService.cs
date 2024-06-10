@@ -1,6 +1,4 @@
-﻿
-using AutoMapper;
-using NerdCritica.Domain.DTOs.Movie;
+﻿using AutoMapper;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Repositories.Movies;
@@ -8,7 +6,6 @@ using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Domain.Utils.Exceptions;
 using System.Data;
-
 
 namespace NerdCritica.Application.Services.User;
 
@@ -175,11 +172,6 @@ public class UserService : IUserService
         {
             throw;
         }
-    }
-
-    public Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 
     public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, string pathProfileImage,
