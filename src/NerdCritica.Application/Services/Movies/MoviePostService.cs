@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using NerdCritica.Domain.Common;
+using NerdCritica.Application.DTOMappers;
+using NerdCritica.Application.Services.Images;
 using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
@@ -14,12 +15,15 @@ namespace NerdCritica.Application.Services.Movies;
 public class MoviePostService : IMoviePostService
 {
 
-private readonly IMoviePostRepository _moviePostRepository;
-private readonly IMapper _mapper;
+    private readonly IMoviePostRepository _moviePostRepository;
+    private readonly IImagesService _imageService;
+    private readonly IMapper _mapper;
 
-    public MoviePostService(IMoviePostRepository moviePostRepository, IMapper mapper)
+    public MoviePostService(IMoviePostRepository moviePostRepository, IImagesService imageService,
+        IMapper mapper)
     {
         _moviePostRepository = moviePostRepository;
+        _imageService = imageService;
         _mapper = mapper;
     }
 
@@ -29,36 +33,38 @@ private readonly IMapper _mapper;
         {
             var movie = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId, cancellationToken);
 
-            _ = movie ?? throw new NotFoundException($"A postagem de filme com o id {moviePostId} não foi encontrada.");
+            ThrowHelper.ThrowNotFoundExceptionIfNull(movie, $"A postagem de filme com o id {moviePostId} não foi encontrada.");
 
             var movieDTO = _mapper.Map<MoviePostResponseDTO>(movie);
 
             return movieDTO;
-        } catch
+        }
+        catch
         {
             throw;
         }
     }
 
-    public async Task<ICollection<MoviePostResponseDTO>> GetMoviePostsAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<MoviePostResponseDTO>> GetMoviePostsAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-       var movies = await _moviePostRepository.GetMoviePostsAsync(cancellationToken);
+        var movies = await _moviePostRepository.GetMoviePostsAsync(cancellationToken);
 
-       var moviesDTOs = _mapper.Map<IEnumerable<MoviePostResponseDTO>>(movies).ToList();
-
-       return moviesDTOs;
+        return movies.ToDTO();
     }
 
-    public async Task<bool> CreateMoviePostAsync(CreateMoviePostRequestDTO moviePost, MovieImages postImages,
-        Dictionary<string, CastImages> castImagePaths, CancellationToken cancellationToken)
+    public async Task<bool> CreateMoviePostAsync(CreateMoviePostRequestDTO moviePost, CancellationToken cancellationToken)
     {
         try
         {
-            var newMoviePost = MoviePost.Create(moviePost.CreatorUserId, postImages.MovieImagePath, 
-                postImages.MovieBackdropPath, postImages.MovieImageBytes, postImages.MovieBackdropBytes, 
-                moviePost.MovieTitle, moviePost.MovieDescription, moviePost.MovieCategory, moviePost.Director, 
+            var postImages = await _imageService.GetPathPostImagesAsync(moviePost.MovieImage,
+            moviePost.MovieBackdropImage);
+            var castImagePaths = await _imageService.GetPathCastImagesAsync(moviePost.Cast);
+
+            var newMoviePost = MoviePost.Create(moviePost.CreatorUserId, postImages.MovieImagePath,
+                postImages.MovieBackdropPath, postImages.MovieImageBytes, postImages.MovieBackdropBytes,
+                moviePost.MovieTitle, moviePost.MovieDescription, moviePost.MovieCategory, moviePost.Director,
                 moviePost.ReleaseDate, moviePost.Runtime);
 
             if (newMoviePost.IsFailure)
@@ -76,13 +82,14 @@ private readonly IMapper _mapper;
             var isSuccess = await _moviePostRepository.CreateCastMovieAsync(cast, postId);
 
             return isSuccess;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
     }
 
-    public async Task<bool> CreateRatingAsync(CreateRatingRequestDTO rating, 
+    public async Task<bool> CreateRatingAsync(CreateRatingRequestDTO rating,
         CancellationToken cancellationToken)
     {
         try
@@ -114,7 +121,8 @@ private readonly IMapper _mapper;
 
             return isCreate;
 
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
@@ -141,25 +149,29 @@ private readonly IMapper _mapper;
 
             return isUpdated;
         }
-        catch
+        catch (Exception)
         {
             throw;
         }
     }
 
-    public async Task<bool> UpdateMoviePostAsync(UpdateMoviePostRequestDTO moviePost, MovieImages postImages, 
-        Dictionary<string, CastImages> castImagePaths, Guid moviePostId, CancellationToken cancellationToken)
+    public async Task<bool> UpdateMoviePostAsync(UpdateMoviePostRequestDTO moviePost,
+        Guid moviePostId, CancellationToken cancellationToken)
     {
         try
         {
-            var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId, 
+            var postImages = await _imageService.GetPathPostImagesAsync(moviePost.MovieImage,
+           moviePost.MovieBackdropImage);
+            var castImagePaths = await _imageService.GetPathCastImagesAsync(moviePost.Cast);
+
+            var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId,
                 cancellationToken);
 
             ThrowHelper.ThrowNotFoundExceptionIfNull(moviePostExist, $"A postagem de filme com o id {moviePostId} não foi encontrada.");
 
             var updatedMoviePost = MoviePost.From(postImages.MovieImagePath, postImages.MovieBackdropPath,
-                postImages.MovieImageBytes, postImages.MovieBackdropBytes, moviePost.MovieTitle, 
-                moviePost.MovieDescription, moviePost.MovieCategory, moviePost.Director, 
+                postImages.MovieImageBytes, postImages.MovieBackdropBytes, moviePost.MovieTitle,
+                moviePost.MovieDescription, moviePost.MovieCategory, moviePost.Director,
                 moviePost.ReleaseDate, moviePost.Runtime);
 
             if (updatedMoviePost.IsFailure)
@@ -169,17 +181,18 @@ private readonly IMapper _mapper;
                     errorMessages);
             }
 
-            bool isMoviePostUpdated = await _moviePostRepository.UpdateMoviePostAsync(updatedMoviePost.Value, 
+            bool isMoviePostUpdated = await _moviePostRepository.UpdateMoviePostAsync(updatedMoviePost.Value,
                 moviePostId, cancellationToken);
 
             List<CastMember> updatedCast = CastMemberHelper.GetCastUpdated(moviePost.Cast, castImagePaths);
 
-            bool isCastMovieUpdated = await _moviePostRepository.UpdateCastMovieAsync(updatedCast, 
+            bool isCastMovieUpdated = await _moviePostRepository.UpdateCastMovieAsync(updatedCast,
                 moviePostId);
 
             return isMoviePostUpdated;
 
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
@@ -188,7 +201,7 @@ private readonly IMapper _mapper;
     public async Task<bool> UpdateMovieRatingAsync(UpdateMovieRatingRequestDTO movieRating, Guid movieRatingId,
         CancellationToken cancellationToken)
     {
-       try
+        try
         {
             var movieRatingExist = await _moviePostRepository.GetRatingByIdAsync(movieRatingId
                 , cancellationToken);
@@ -219,7 +232,8 @@ private readonly IMapper _mapper;
             await _moviePostRepository.UpdateCommentAsync(updateComment.Value, movieRatingId);
 
             return true;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
@@ -227,7 +241,7 @@ private readonly IMapper _mapper;
 
     public async Task<bool> DeleteMoviePostAsync(Guid moviePostId, CancellationToken cancellationToken)
     {
-       try
+        try
         {
             var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId, cancellationToken);
 
@@ -236,7 +250,8 @@ private readonly IMapper _mapper;
             bool isDeleted = await _moviePostRepository.DeleteMoviePostAsync(moviePostId, cancellationToken);
 
             return isDeleted;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
@@ -261,11 +276,12 @@ private readonly IMapper _mapper;
         }
     }
 
-    public async Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest, 
+    public async Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest,
         CancellationToken cancellationToken)
     {
-        try {
-       
+        try
+        {
+
             var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(deleteLikeRequest, cancellationToken);
 
             StringBuilder message = new StringBuilder();

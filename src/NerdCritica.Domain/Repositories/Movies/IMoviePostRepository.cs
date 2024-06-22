@@ -8,7 +8,7 @@ namespace NerdCritica.Domain.Repositories.Movies;
 public interface IMoviePostRepository
 {
     Task<MoviePostMapping?> GetMoviePostByIdAsync(Guid moviePostId, CancellationToken cancellationToken);
-    Task<IEnumerable<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken);
     Task<MovieRatingMapping?> GetRatingByIdAsync(Guid ratingId,
        CancellationToken cancellationToken);
     Task<CommentLikeMapping?> GetCommentLikeByIdAsync(DeleteLikeRequestDTO deleteLikeRequest,

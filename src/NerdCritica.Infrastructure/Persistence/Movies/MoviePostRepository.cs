@@ -95,7 +95,7 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public async Task<IEnumerable<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<MoviePostMapping>> GetMoviePostsAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

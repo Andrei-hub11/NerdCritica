@@ -1,4 +1,6 @@
 ﻿using NerdCritica.Application.Services.EmailService;
+using NerdCritica.Application.Services.Images;
+using NerdCritica.Application.Services.ImageServiceConfiguration;
 using NerdCritica.Application.Services.Movies;
 using NerdCritica.Application.Services.User;
 
@@ -12,8 +14,10 @@ public static class ServicesConfigExtensions
         services
              .AddControllers()
                          .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
-        services.AddTransient<MoviePostService>();
-        services.AddTransient<UserService>();
+        services.AddSingleton<IImageServiceConfiguration>(new ImageServiceConfiguration(AppDomain.CurrentDomain.BaseDirectory));
+        services.AddTransient<IImagesService, ImageService>();
+        services.AddTransient<IMoviePostService, MoviePostService>();
+        services.AddTransient<IUserService, UserService>();
         //services.AddTransient<EmailService>();
     }
 }

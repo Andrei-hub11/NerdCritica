@@ -14,9 +14,7 @@ public class MappingProfile : Profile
         CreateMap<CastMemberMapping, CastMemberResponseDTO>();
         CreateMap<CommentsMapping, CommentsResponseDTO>();
         CreateMap<CommentLikeMapping, CommentLikeResponseDTO>();
-        CreateMap<MoviePostMapping, MoviePostResponseDTO>()
-        .ForMember(dest => dest.Runtime, opt => opt.MapFrom(src =>
-         TimeSpan.FromSeconds(src.Runtime)));
+        CreateMap<MoviePostMapping, MoviePostResponseDTO>();
 
         //CreateMap<ApplicationUser, UserDTO>();
         //CreateMap<UserUpdateModel, UserDTO>();

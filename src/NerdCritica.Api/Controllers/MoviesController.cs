@@ -11,9 +11,9 @@ namespace NerdCritica.Api.Controllers;
 public class MoviesController : ControllerBase
 {
 
-    private readonly MoviePostService _postService;
+    private readonly IMoviePostService _postService;
 
-    public MoviesController(MoviePostService postService)
+    public MoviesController(IMoviePostService postService)
     {
         _postService = postService;
     }
@@ -56,11 +56,7 @@ public class MoviesController : ControllerBase
             return StatusCode(499);
         }
 
-        var postImages = await ImageHelper.GetPathPostImagesAsync(moviePost.MovieImage, 
-            moviePost.MovieBackdropImage);
-        var castImages = await ImageHelper.GetPathCastImagesAsync(moviePost.Cast);
-
-        bool isCreate = await _postService.CreateMoviePostAsync(moviePost, postImages, castImages, 
+        bool isCreate = await _postService.CreateMoviePostAsync(moviePost, 
             cancellationToken);
 
         return Ok(new { Success = isCreate });
@@ -106,11 +102,7 @@ public class MoviesController : ControllerBase
             return StatusCode(499);
         }
 
-        var postImages = await ImageHelper.GetPathPostImagesAsync(moviePost.MovieImage,
-            moviePost.MovieBackdropImage);
-        var castImages = await ImageHelper.GetPathCastImagesAsync(moviePost.Cast);
-
-        bool isUpdated = await _postService.UpdateMoviePostAsync(moviePost, postImages, castImages, moviePostId,
+        bool isUpdated = await _postService.UpdateMoviePostAsync(moviePost, moviePostId,
             cancellationToken);
 
         return Ok(new { Success = isUpdated });
