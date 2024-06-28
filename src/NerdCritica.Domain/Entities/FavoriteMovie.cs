@@ -12,7 +12,7 @@ public class FavoriteMovie
     private FavoriteMovie(Guid moviePostId, string userId) { 
         MoviePostId = moviePostId;
         IdentityUserId = userId;
-        CreatedAt = DateTimeHelper.NowInBrasilia();
+        CreatedAt = DateTime.Now;
     }
 
     public static Result<FavoriteMovie> Create(Guid moviePostId, string identityUserId)

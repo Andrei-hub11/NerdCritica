@@ -1,6 +1,4 @@
-﻿
-
-using NerdCritica.Domain.Utils;
+﻿using NerdCritica.Domain.Utils;
 using System.Text.RegularExpressions;
 
 namespace NerdCritica.Domain.Entities;
@@ -14,7 +12,7 @@ public class ExtensionUserIdentity
     public string ProfileImagePath { get; private set; } = string.Empty;
     public byte[] ProfileImage { get; private set; } = new byte[0];
     public List<string> Roles { get; private set; } = new List<string>();
-    public DateTime LastAccessDate { get; private set; } = DateTimeHelper.NowInBrasilia();
+    public DateTime LastAccessDate { get; private set; } = DateTime.Now;
 
     private ExtensionUserIdentity(string userName,string email, string password, string profileImagePath,
         byte[] profileImage, List<string> roles)
