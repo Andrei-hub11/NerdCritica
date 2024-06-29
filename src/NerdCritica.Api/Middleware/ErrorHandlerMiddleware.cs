@@ -68,6 +68,14 @@ public class ErrorHandlerMiddleware
 
             await _exceptionHandler.HandleCreateUserException(context, ex);
         }
+        catch (UnauthorizeUserAccessException ex)
+        {
+            _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 401));
+
+            HandleExceptionAfterResponseStarted(context, ex);
+
+            await _exceptionHandler.HandleUnauthorizedUserAccessException(context, ex);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ExceptionDetailsHelper.GetExceptionDetails(ex, context, 500));

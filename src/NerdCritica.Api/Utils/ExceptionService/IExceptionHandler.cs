@@ -8,6 +8,6 @@ public interface IExceptionHandler
     Task HandleValidationException(HttpContext context, ValidationException ex);
     Task HandleNotFoundException (HttpContext context, NotFoundException ex);
     Task HandleBadRequestException (HttpContext context, BadRequestException ex);
-    Task HandleUnauthorizedAccessException (HttpContext context, UnauthorizedAccessException ex);
+    Task HandleUnauthorizedUserAccessException (HttpContext context, UnauthorizeUserAccessException ex);
     Task HandleCreateUserException (HttpContext context, CreateUserException ex);
 }

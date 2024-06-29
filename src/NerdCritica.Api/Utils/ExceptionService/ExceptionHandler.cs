@@ -57,11 +57,7 @@ public class ExceptionHandler : IExceptionHandler
     public async Task HandleValidationException(HttpContext context, ValidationException ex)
     {
 
-        PathString originalPath = context.Request.Path;
-        if (_options.ErrorHandlingPath.HasValue)
-        {
-            context.Request.Path = _options.ErrorHandlingPath;
-        }
+        PathString originalPath = GetOriginalPath(context);
 
         try
         {
@@ -106,12 +102,7 @@ public class ExceptionHandler : IExceptionHandler
 
     public async Task HandleNotFoundException(HttpContext context, NotFoundException ex)
     {
-
-        PathString originalPath = context.Request.Path;
-        if (_options.ErrorHandlingPath.HasValue)
-        {
-            context.Request.Path = _options.ErrorHandlingPath;
-        }
+        PathString originalPath = GetOriginalPath(context);
 
         try
         {
@@ -140,11 +131,7 @@ public class ExceptionHandler : IExceptionHandler
 
     public async Task HandleCreateUserException(HttpContext context, CreateUserException ex)
     {
-        PathString originalPath = context.Request.Path;
-        if (_options.ErrorHandlingPath.HasValue)
-        {
-            context.Request.Path = _options.ErrorHandlingPath;
-        }
+        PathString originalPath = GetOriginalPath(context);
 
         try
         {
@@ -169,13 +156,9 @@ public class ExceptionHandler : IExceptionHandler
         }
     }
 
-    public async Task HandleUnauthorizedAccessException(HttpContext context, UnauthorizedAccessException ex)
+    public async Task HandleUnauthorizedUserAccessException(HttpContext context, UnauthorizeUserAccessException ex)
     {
-        PathString originalPath = context.Request.Path;
-        if (_options.ErrorHandlingPath.HasValue)
-        {
-            context.Request.Path = _options.ErrorHandlingPath;
-        }
+        PathString originalPath = GetOriginalPath(context);
 
         try
         {
@@ -205,11 +188,7 @@ public class ExceptionHandler : IExceptionHandler
 
     public async Task HandleBadRequestException(HttpContext context, BadRequestException ex)
     {
-        PathString originalPath = context.Request.Path;
-        if (_options.ErrorHandlingPath.HasValue)
-        {
-            context.Request.Path = _options.ErrorHandlingPath;
-        }
+        PathString originalPath = GetOriginalPath(context);
 
         try
         {
@@ -234,5 +213,14 @@ public class ExceptionHandler : IExceptionHandler
         }
     }
 
+    private PathString GetOriginalPath(HttpContext context)
+    {
+        PathString originalPath = context.Request.Path;
+        if (_options.ErrorHandlingPath.HasValue)
+        {
+            context.Request.Path = _options.ErrorHandlingPath;
+        }
 
+        return originalPath;
+    }
 }
