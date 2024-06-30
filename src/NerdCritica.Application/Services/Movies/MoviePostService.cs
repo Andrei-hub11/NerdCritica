@@ -144,6 +144,14 @@ public class MoviePostService : IMoviePostService
                     $"não está presente na avaliação de id {commentLikeRequest.RatingId}.");
             }
 
+            var commentExist = await _moviePostRepository.GetCommentLikeByIdAsync(commentLikeRequest.CommentId,
+                commentLikeRequest.IdentityUserId, cancellationToken);
+
+            if (commentExist != null)
+            {
+                throw new BadRequestException($"O usuário com id {commentLikeRequest.IdentityUserId} já deu like no comentário.");
+            }
+
             bool isUpdated = await _moviePostRepository.CreateCommentLikeAsync(commentLikeRequest.CommentId,
                 commentLikeRequest.IdentityUserId, cancellationToken);
 
@@ -282,7 +290,8 @@ public class MoviePostService : IMoviePostService
         try
         {
 
-            var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(deleteLikeRequest, cancellationToken);
+            var likeExist = await _moviePostRepository.GetCommentLikeByIdAsync(deleteLikeRequest.CommentId,
+                deleteLikeRequest.IdentityUserId, cancellationToken);
 
             StringBuilder message = new StringBuilder();
             message.Append("O like não foi encontrado. ");
@@ -291,7 +300,8 @@ public class MoviePostService : IMoviePostService
 
             ThrowHelper.ThrowNotFoundExceptionIfNull(likeExist, message.ToString());
 
-            bool isDeleted = await _moviePostRepository.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken);
+            bool isDeleted = await _moviePostRepository.DeleteCommentLikeAsync(deleteLikeRequest.CommentId, 
+                deleteLikeRequest.IdentityUserId, cancellationToken);
 
             return isDeleted;
         }

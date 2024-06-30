@@ -402,6 +402,42 @@ public class MoviesTests
     }
 
     [Fact]
+    public async Task CreateCommentLikeAsync_UserAlreadyLikedComment_ThrowsBadRequestException()
+    {
+        var movieRatingId = Guid.NewGuid();
+        var commentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        var mockImageService = new Mock<IImagesService>();
+        var mockRepository = new Mock<IMoviePostRepository>();
+
+        mockRepository.Setup(repo => repo.GetRatingByIdAsync(movieRatingId, It.IsAny<CancellationToken>()))
+          .ReturnsAsync(new MovieRatingMapping
+          {
+              Comment = new CommentsMapping
+              { CommentId = Guid.NewGuid() }
+          });
+
+        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(commentId, userId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CommentLikeMapping { CommentId = commentId, IdentityUserId = userId.ToString() });
+
+        var mockMapper = new Mock<IMapper>();
+
+        var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
+
+        var request = new CreateCommentLikeRequestDTO
+        (
+            RatingId: movieRatingId,
+            CommentId: commentId,
+            IdentityUserId: userId.ToString(),
+            CommentAuthorId: Guid.NewGuid().ToString()
+        );
+
+        await Assert.ThrowsAsync<BadRequestException>(() => service.CreateCommentLikeAsync(request, CancellationToken.None));
+    }
+
+
+    [Fact]
     public async Task CreateCommentLikeAsync_RepositoryCalledWithExpectedArguments()
     {
         var movieRatingId = Guid.NewGuid();
@@ -412,6 +448,9 @@ public class MoviesTests
         var mockRepository = new Mock<IMoviePostRepository>();
         mockRepository.Setup(repo => repo.GetRatingByIdAsync(movieRatingId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MovieRatingMapping { Comment = new CommentsMapping { CommentId = commentId } });
+
+        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(commentId, userId.ToString(), It.IsAny<CancellationToken>()))
+          .ReturnsAsync(() => null);
 
         var mockMapper = new Mock<IMapper>();
 
@@ -911,9 +950,11 @@ public class MoviesTests
 
         var mockImageService = new Mock<IImagesService>();
         var mockRepository = new Mock<IMoviePostRepository>();
-        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(deleteLikeRequest, cancellationToken))
+        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(deleteLikeRequest.CommentId, 
+            deleteLikeRequest.IdentityUserId, cancellationToken))
                       .ReturnsAsync(new CommentLikeMapping()); // Simula o like encontrado
-        mockRepository.Setup(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken))
+        mockRepository.Setup(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest.CommentId, 
+            deleteLikeRequest.IdentityUserId, cancellationToken))
                       .ReturnsAsync(true); // Simula a exclusão bem-sucedida
 
         var userId = Guid.NewGuid();
@@ -927,12 +968,14 @@ public class MoviesTests
         Assert.True(result); // Verifica se a exclusão foi bem-sucedida
 
         // Verifica se os argumentos passados para o método do repositório estão corretos
-        mockRepository.Verify(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken), Times.Once);
+        mockRepository.Verify(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest.CommentId, 
+            deleteLikeRequest.IdentityUserId, cancellationToken), Times.Once);
     }
 
     [Fact]
     public async Task DeleteCommentLikeAsync_LikeNotFound_ThrowsNotFoundException()
     {
+
         var deleteLikeRequest = new DeleteLikeRequestDTO
         (
             CommentId: Guid.NewGuid(),
@@ -943,7 +986,7 @@ public class MoviesTests
 
         var mockImageService = new Mock<IImagesService>();
         var mockRepository = new Mock<IMoviePostRepository>();
-        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(deleteLikeRequest, cancellationToken))
+        mockRepository.Setup(repo => repo.GetCommentLikeByIdAsync(deleteLikeRequest.CommentId, deleteLikeRequest.IdentityUserId, cancellationToken))
                       .ReturnsAsync(() => null);
         var userId = Guid.NewGuid();
 
@@ -956,7 +999,7 @@ public class MoviesTests
             await service.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken);
         });
 
-        mockRepository.Verify(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest, cancellationToken), Times.Never);
+        mockRepository.Verify(repo => repo.DeleteCommentLikeAsync(deleteLikeRequest.CommentId, deleteLikeRequest.IdentityUserId, cancellationToken), Times.Never);
     }
 
 }

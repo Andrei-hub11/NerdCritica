@@ -1,12 +1,11 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Identity;
 using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Infrastructure.Context;
-using System.Threading;
+using System.ComponentModel.Design;
 
 
 namespace NerdCritica.Infrastructure.Persistence.Movies;
@@ -197,7 +196,7 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public async Task<CommentLikeMapping?> GetCommentLikeByIdAsync(DeleteLikeRequestDTO deleteLikeRequest,
+    public async Task<CommentLikeMapping?> GetCommentLikeByIdAsync(Guid commentId, string identityUserId,
     CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -209,8 +208,8 @@ public class MoviePostRepository : IMoviePostRepository
         {
             var commentLike = await connection.QueryFirstOrDefaultAsync<CommentLikeMapping>(query, new
             {
-                deleteLikeRequest.CommentId,
-                deleteLikeRequest.IdentityUserId
+                CommentId = commentId,
+                IdentityUserId = identityUserId,
             });
 
             return commentLike;
@@ -472,7 +471,7 @@ public class MoviePostRepository : IMoviePostRepository
         }
     }
 
-    public async Task<bool> DeleteCommentLikeAsync(DeleteLikeRequestDTO deleteLikeRequest,
+    public async Task<bool> DeleteCommentLikeAsync(Guid commentId, string identityUserId,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -484,8 +483,8 @@ public class MoviePostRepository : IMoviePostRepository
         {
             await connection.QueryAsync(query, new
             {
-                deleteLikeRequest.CommentId,
-                deleteLikeRequest.IdentityUserId
+                CommentId = commentId,
+                IdentityUserId = identityUserId,
             });
 
             return true;
