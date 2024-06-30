@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.User;
+using NerdCritica.Domain.Contracts;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Utils;
-using System.Security.Claims;
 
 namespace NerdCritica.Api.Controllers;
 
@@ -14,11 +14,13 @@ namespace NerdCritica.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IUserContext _userContext;
     //private readonly EmailService _emailService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IUserContext userContext)
     {
         _userService = userService;
+        _userContext = userContext;
     }
 
     [Authorize]
@@ -30,12 +32,7 @@ public class UserController : ControllerBase
             return StatusCode(499);
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Obtém o ID do usuário do token JWT
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            throw new UnauthorizedAccessException();
-        }
+        var userId = _userContext.UserId; // Obtém o ID do usuário do token JWT
 
         var user = await _userService.GetUserByIdAsync(userId, cancellationToken);
         return Ok(new
@@ -79,9 +76,7 @@ public class UserController : ControllerBase
             return StatusCode(499);
         }
 
-        byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
-        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(profileImageBytes);
-        var resultDTO = await _userService.CreateUserAsync(user, pathProfileImage, profileImageBytes, cancellationToken);
+        var resultDTO = await _userService.CreateUserAsync(user, cancellationToken);
 
         return Ok(new
         {
@@ -136,10 +131,7 @@ public class UserController : ControllerBase
             return StatusCode(499);
         }
 
-        byte[] profileImageBytes = Base64Helper.ConvertFromBase64String(user.ProfileImage);
-        var pathProfileImage = await ImageHelper.GetPathProfileImageAsync(profileImageBytes);
-        var resultDTO = await _userService.UpdateUserAsync(user, identityUserId, pathProfileImage, profileImageBytes,
-            cancellationToken);
+        var resultDTO = await _userService.UpdateUserAsync(user, identityUserId, cancellationToken);
 
         return Ok(new
         {

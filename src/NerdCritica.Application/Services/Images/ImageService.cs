@@ -20,18 +20,24 @@ public class ImageService : IImagesService
         API_ROOT_DIRECTORY = configuration.ApiRootDirectory;
     }
 
-    public async Task<string> GetPathProfileImageAsync(byte[] image)
+    public async Task<ProfileImage> GetProfileImageAsync(string profileImage)
     {
-        if (image == null || image.Length == 0) return string.Empty;
+        var result = new ProfileImage();
+        if (string.IsNullOrWhiteSpace(profileImage)) return result;
 
         var fileName = GenerateFileName();
+        var profileImageBytes = ConvertFromBase64String(profileImage);
         var filePath = GetProfileImagePath(fileName);
 
-        await SaveImageAsync(filePath, image);
-        return GetRelativeProfileImagePath(fileName);
+        await SaveImageAsync(filePath, profileImageBytes);
+        var profileImagePath = GetRelativeProfileImagePath(fileName);
+
+        result.ProfileImageBytes = profileImageBytes;
+        result.ProfileImagePath = profileImagePath;
+        return result;
     }
 
-    public async Task<MovieImages> GetPathPostImagesAsync(string movieImage, string movieBackdrop)
+    public async Task<MovieImages> GetMoviePostImagesAsync(string movieImage, string movieBackdrop)
     {
         var result = new MovieImages();
 
@@ -60,7 +66,7 @@ public class ImageService : IImagesService
         return result;
     }
 
-    public async Task<Dictionary<string, CastImages>> GetPathCastImagesAsync(List<CastMemberRequestDTO> cast)
+    public async Task<Dictionary<string, CastImages>> GetCastImagesAsync(List<CastMemberRequestDTO> cast)
     {
         var profileImagePaths = new Dictionary<string, CastImages>();
 
@@ -81,7 +87,7 @@ public class ImageService : IImagesService
         return profileImagePaths;
     }
 
-    public async Task<Dictionary<string, CastImages>> GetPathCastImagesAsync(List<UpdateCastMemberRequestDTO> cast)
+    public async Task<Dictionary<string, CastImages>> GetCastImagesAsync(List<UpdateCastMemberRequestDTO> cast)
     {
         var imagePaths = new Dictionary<string, CastImages>();
 

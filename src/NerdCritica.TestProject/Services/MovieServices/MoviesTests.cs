@@ -77,7 +77,7 @@ public class MoviesTests
     };
 
         var mockImageService = new Mock<IImagesService>();
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                         .ReturnsAsync(new MovieImages
                         {
                             MovieImagePath = "path/to/movie/image",
@@ -86,7 +86,7 @@ public class MoviesTests
                             MovieBackdropBytes = new byte[1024]
                         });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },
@@ -139,7 +139,7 @@ public class MoviesTests
 
         var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
 
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                       .ReturnsAsync(new MovieImages
                       {
                           MovieImagePath = "path/to/movie/image",
@@ -148,7 +148,7 @@ public class MoviesTests
                           MovieBackdropBytes = new byte[1024]
                       });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },
@@ -184,7 +184,7 @@ public class MoviesTests
 
         var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
 
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                    .ReturnsAsync(new MovieImages
                    {
                        MovieImagePath = "path/to/movie/image",
@@ -193,7 +193,7 @@ public class MoviesTests
                        MovieBackdropBytes = new byte[1024]
                    });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },
@@ -470,7 +470,7 @@ public class MoviesTests
 
         var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
 
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                    .ReturnsAsync(new MovieImages
                    {
                        MovieImagePath = "path/to/movie/image",
@@ -479,7 +479,7 @@ public class MoviesTests
                        MovieBackdropBytes = new byte[1024]
                    });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<UpdateCastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<UpdateCastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },
@@ -544,7 +544,7 @@ public class MoviesTests
 
         var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
 
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                    .ReturnsAsync(new MovieImages
                    {
                        MovieImagePath = "path/to/movie/image",
@@ -553,7 +553,7 @@ public class MoviesTests
                        MovieBackdropBytes = new byte[1024]
                    });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },
@@ -620,7 +620,7 @@ public class MoviesTests
 
         var service = new MoviePostService(mockRepository.Object, mockImageService.Object, mockMapper.Object);
 
-        mockImageService.Setup(service => service.GetPathPostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
+        mockImageService.Setup(service => service.GetMoviePostImagesAsync(It.IsAny<string>(), It.IsAny<string>()))
                    .ReturnsAsync(new MovieImages
                    {
                        MovieImagePath = "path/to/movie/image",
@@ -629,7 +629,7 @@ public class MoviesTests
                        MovieBackdropBytes = new byte[1024]
                    });
 
-        mockImageService.Setup(service => service.GetPathCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
+        mockImageService.Setup(service => service.GetCastImagesAsync(It.IsAny<List<CastMemberRequestDTO>>()))
                         .ReturnsAsync(new Dictionary<string, CastImages>
                         {
                         { "Actor 1", CastImages.Create("path/to/actor1/image", new byte[1024]) },

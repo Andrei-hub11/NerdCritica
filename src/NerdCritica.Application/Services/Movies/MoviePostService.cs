@@ -58,9 +58,9 @@ public class MoviePostService : IMoviePostService
     {
         try
         {
-            var postImages = await _imageService.GetPathPostImagesAsync(moviePost.MovieImage,
+            var postImages = await _imageService.GetMoviePostImagesAsync(moviePost.MovieImage,
             moviePost.MovieBackdropImage);
-            var castImagePaths = await _imageService.GetPathCastImagesAsync(moviePost.Cast);
+            var castImagePaths = await _imageService.GetCastImagesAsync(moviePost.Cast);
 
             var newMoviePost = MoviePost.Create(moviePost.CreatorUserId, postImages.MovieImagePath,
                 postImages.MovieBackdropPath, postImages.MovieImageBytes, postImages.MovieBackdropBytes,
@@ -160,9 +160,9 @@ public class MoviePostService : IMoviePostService
     {
         try
         {
-            var postImages = await _imageService.GetPathPostImagesAsync(moviePost.MovieImage,
+            var postImages = await _imageService.GetMoviePostImagesAsync(moviePost.MovieImage,
            moviePost.MovieBackdropImage);
-            var castImagePaths = await _imageService.GetPathCastImagesAsync(moviePost.Cast);
+            var castImagePaths = await _imageService.GetCastImagesAsync(moviePost.Cast);
 
             var moviePostExist = await _moviePostRepository.GetMoviePostByIdAsync(moviePostId,
                 cancellationToken);

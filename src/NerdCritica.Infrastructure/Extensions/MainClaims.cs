@@ -1,22 +1,20 @@
-﻿using System.Security.Claims;
+﻿using NerdCritica.Domain.Utils.Exceptions;
+using System.Security.Claims;
 
 namespace NerdCritica.Infrastructure.Extensions;
 
 internal static class ClaimsPrincipalExtensions
 {
-    public static Guid GetUserId(this ClaimsPrincipal? principal)
+    public static string GetUserId(this ClaimsPrincipal? principal)
     {
         Claim? userIdClaim = principal?.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim == null)
         {
-            throw new ApplicationException("User id is unavailable");
+            throw new UnauthorizeUserAccessException("O contexto do usuário não está disponível");
         }
 
-        string userIdValue = userIdClaim.Value; // Acessando a propriedade Value para obter o valor do Claim
-        return Guid.TryParse(userIdValue, out Guid parsedUserId) ?
-            parsedUserId :
-            throw new ApplicationException("User id is unavailable");
+        return userIdClaim.Value;
     }
 }
 

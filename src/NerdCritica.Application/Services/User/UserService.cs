@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using NerdCritica.Application.Services.Images;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Repositories.Movies;
@@ -13,22 +14,26 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IMoviePostRepository _moviePostRepository;
+    private readonly IImagesService _imagesService;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IMoviePostRepository moviePostRepository, IMapper mapper)
+    public UserService(IUserRepository userRepository, IMoviePostRepository moviePostRepository, IImagesService imagesService, IMapper mapper)
     {
         _userRepository = userRepository;
         _moviePostRepository = moviePostRepository;
+        _imagesService = imagesService;
         _mapper = mapper;
     }
 
     public async Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO,
-        string pathImage, byte[] profileImageBytes, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
         try
         {
+            var result = await _imagesService.GetProfileImageAsync(createUserRequestDTO.ProfileImage);
+
             var newUser = ExtensionUserIdentity.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
-                createUserRequestDTO.Password, profileImageBytes, pathImage, createUserRequestDTO.Roles);
+                createUserRequestDTO.Password, result.ProfileImageBytes, result.ProfileImagePath, createUserRequestDTO.Roles);
 
             if (newUser.IsFailure)
             {
@@ -174,13 +179,15 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, string pathProfileImage,
-        byte[] profileImageBytes, CancellationToken cancellationToken)
+    public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, 
+        CancellationToken cancellationToken)
     {
         try
         {
-          var validatedUser =  ExtensionUserIdentity.From(userDTO.Username, userDTO.Email, 
-                profileImageBytes, pathProfileImage);
+            var result = await _imagesService.GetProfileImageAsync(userDTO.ProfileImage);
+
+            var validatedUser =  ExtensionUserIdentity.From(userDTO.Username, userDTO.Email, 
+                result.ProfileImageBytes, result.ProfileImagePath);
 
             if (validatedUser.IsFailure)
             {
