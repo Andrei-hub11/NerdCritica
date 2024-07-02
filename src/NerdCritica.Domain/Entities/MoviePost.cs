@@ -79,10 +79,7 @@ public class MoviePost
 
         if (result.Count > 0)
         {
-            var emptyMoviePost = new MoviePost(string.Empty, string.Empty, string.Empty, new byte[0],
-                new byte[0], string.Empty, string.Empty, string.Empty, string.Empty, DateTime.Now, 
-                TimeSpan.Zero);
-            return Result.AddErrors(result, emptyMoviePost);
+            return Result.Fail(result);
         }
 
         var moviePost = new MoviePost(creatorUserId, movieImagePath, movieBackdropPath, movieImage,
@@ -102,10 +99,7 @@ public class MoviePost
 
         if (result.Count > 0)
         {
-            var emptyMoviePost = new MoviePost(string.Empty, string.Empty, string.Empty,
-                new byte[0], new byte[0], string.Empty, string.Empty, string.Empty, string.Empty,
-                DateTime.Now, TimeSpan.Zero);
-            return Result.AddErrors(result, emptyMoviePost);
+            return Result.Fail(result);
         }
 
         var moviePost = new MoviePost(movieImagePath, movieBackdropPath, movieImage,

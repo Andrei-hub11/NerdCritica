@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace NerdCritica.Domain.Entities;
 
-public class ExtensionUserIdentity
+public class IdentityUserExtension
 {
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; }
@@ -14,7 +14,7 @@ public class ExtensionUserIdentity
     public List<string> Roles { get; private set; } = new List<string>();
     public DateTime LastAccessDate { get; private set; } = DateTime.Now;
 
-    private ExtensionUserIdentity(string userName,string email, string password, string profileImagePath,
+    private IdentityUserExtension(string userName,string email, string password, string profileImagePath,
         byte[] profileImage, List<string> roles)
     {
         UserName = userName;
@@ -25,7 +25,7 @@ public class ExtensionUserIdentity
         Roles = roles;
     }
 
-    private ExtensionUserIdentity(string userName, string email, string profileImagePath, byte[] profileImage)
+    private IdentityUserExtension(string userName, string email, string profileImagePath, byte[] profileImage)
     {
         UserName = userName;
         Email = email;
@@ -33,7 +33,7 @@ public class ExtensionUserIdentity
         ProfileImage = profileImage;
     }
 
-    public static Result<ExtensionUserIdentity> Create(string userName, string email, string password, byte[] profileImage, 
+    public static Result<IdentityUserExtension> Create(string userName, string email, string password, byte[] profileImage, 
         string profileImagePath, List<string> roles)
     {
         var isCreate = true;
@@ -41,18 +41,16 @@ public class ExtensionUserIdentity
 
         if (result.Count > 0)
         {
-            var emptyUser = new ExtensionUserIdentity(string.Empty, string.Empty, string.Empty, 
-                string.Empty, new byte[0], new List<string>());
-            return Result.AddErrors(result, emptyUser);
+            return Result.Fail(result);
         }
 
-        var user = new ExtensionUserIdentity(userName, email, password, profileImagePath, 
+        var user = new IdentityUserExtension(userName, email, password, profileImagePath, 
             profileImage, roles);
 
         return Result.Ok(user);
     }
 
-    public static Result<ExtensionUserIdentity> From(string userName, 
+    public static Result<IdentityUserExtension> From(string userName, 
         string email, byte[] profileImage,
      string profileImagePath)
     {
@@ -61,12 +59,10 @@ public class ExtensionUserIdentity
 
         if (result.Count > 0)
         {
-            var emptyUser = new ExtensionUserIdentity(string.Empty, string.Empty, string.Empty,
-                string.Empty, new byte[0], new List<string>());
-            return Result.AddErrors(result, emptyUser);
+            return Result.Fail(result);
         }
 
-        return Result.Ok(new ExtensionUserIdentity(userName, email, profileImagePath, profileImage));
+        return Result.Ok(new IdentityUserExtension(userName, email, profileImagePath, profileImage));
     }
         private static List<Error> UserValidation(string userName, string email,
         byte[] imageProfile, bool isCreate, string? password = null, List<string>? roles = null)

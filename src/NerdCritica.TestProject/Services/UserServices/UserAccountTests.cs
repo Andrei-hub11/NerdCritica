@@ -187,7 +187,7 @@ public class UserAccountTests
         var tokenServiceMock = new Mock<ITokenService>();
         var emailServiceMock = new Mock<IEmailService>();
 
-        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
+        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<IdentityUserExtension>()))
                           .ReturnsAsync(Result.Ok(new UserCreationTokenAndId(expectedUserId, expectedToken)));
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(expectedUserId, cancellationToken))
@@ -265,8 +265,8 @@ public class UserAccountTests
         var emailServiceMock = new Mock<IEmailService>();
         var mapperMock = new Mock<IMapper>();
 
-        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
-                          .ReturnsAsync(Result.Fail(errorCode, new UserCreationTokenAndId(string.Empty, string.Empty)));
+        userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<IdentityUserExtension>()))
+                          .ReturnsAsync(Result.Fail(errorCode));
 
         mockImageService.Setup(service => service.GetProfileImageAsync(It.IsAny<string>()))
                   .ReturnsAsync(new ProfileImage
@@ -358,8 +358,7 @@ public class UserAccountTests
                     mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         userRepositoryMock.Setup(repo => repo.LoginUserAsync(userLoginRequestDTO, cancellationToken))
-                          .ReturnsAsync(Result.Fail(expectedErrorMessage, new UserLogin(string.Empty, 
-                          new UserMapping())));
+                          .ReturnsAsync(Result.Fail(expectedErrorMessage));
 
         var exception = await Assert.ThrowsAsync(expectedExceptionType, 
             () => userService.LoginUserAsync(userLoginRequestDTO, cancellationToken));
@@ -567,7 +566,7 @@ public class UserAccountTests
 
         userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
                           .ReturnsAsync(existingUser);
-        userRepositoryMock.Setup(repo => repo.UpdateUserAsync(It.IsAny<ExtensionUserIdentity>(), userId, cancellationToken))
+        userRepositoryMock.Setup(repo => repo.UpdateUserAsync(It.IsAny<IdentityUserExtension>(), userId, cancellationToken))
                           .ReturnsAsync(Result.Ok(true)); // Indique que a atualização foi bem-sucedida
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(userId, cancellationToken))
                           .ReturnsAsync(existingUser); // Retorne o usuário existente após a atualização
@@ -595,7 +594,7 @@ public class UserAccountTests
 
         // Assert
         userRepositoryMock.Verify(repo => repo.GetUserByEmailAsync(updateUserRequestDTO.Email, cancellationToken), Times.Once);
-        userRepositoryMock.Verify(repo => repo.UpdateUserAsync(It.IsAny<ExtensionUserIdentity>(), userId, cancellationToken), Times.Once);
+        userRepositoryMock.Verify(repo => repo.UpdateUserAsync(It.IsAny<IdentityUserExtension>(), userId, cancellationToken), Times.Once);
         userRepositoryMock.Verify(repo => repo.GetUserByIdAsync(userId, cancellationToken), Times.Once);
     }
 

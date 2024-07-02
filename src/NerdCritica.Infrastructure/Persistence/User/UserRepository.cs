@@ -9,7 +9,7 @@ using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Infrastructure.Context;
 using NerdCritica.Infrastructure.Extensions;
-using System.Threading;
+
 
 namespace NerdCritica.Infrastructure.Persistence.User;
 
@@ -116,32 +116,42 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<Result<UserCreationTokenAndId>> CreateUserAsync(ExtensionUserIdentity createUser)
+    private async Task<Result<IdentityUser>> CreateIdentityUserAsync(IdentityUserExtension createUser)
     {
         var newIdentityUser = new IdentityUser { UserName = createUser.UserName, Email = createUser.Email };
-        var newUser = await _userManager.CreateAsync(newIdentityUser, createUser.Password);
+        var result = await _userManager.CreateAsync(newIdentityUser, createUser.Password);
 
-        if (!newUser.Succeeded)
+        if (!result.Succeeded)
         {
-            foreach (var error in newUser.Errors)
+            foreach (var error in result.Errors)
             {
                 if (error.Code == "DuplicateUserName")
                 {
-                    return Result.Fail("DuplicateUserName", new UserCreationTokenAndId(string.Empty, string.Empty));
+                    return Result.Fail("DuplicateUserName");
                 }
                 else if (error.Code == "DuplicateEmail")
                 {
-                    return Result.Fail("DuplicateEmail", new UserCreationTokenAndId(string.Empty, string.Empty));
+                    return Result.Fail("DuplicateEmail");
                 }
                 else
                 {
-                    return Result.Fail("Unknown", new UserCreationTokenAndId(string.Empty, string.Empty));
+                    return Result.Fail("Unknown");
                 }
             }
         }
 
-        await _userManager.AddToRoleAsync(newIdentityUser, createUser.Roles[0]);
-        var token = new CreateToken(_configuration).GenerateJwtToken(newIdentityUser, createUser.Roles);
+        return Result.Ok(newIdentityUser);
+    }
+
+    public async Task<Result<UserCreationTokenAndId>> CreateUserAsync(IdentityUserExtension createUser)
+    {
+        var newIdentityUser = await CreateIdentityUserAsync(createUser);
+
+        if (newIdentityUser.IsFailure)
+            return Result.Fail(newIdentityUser.Errors.ToList());
+
+        await _userManager.AddToRoleAsync(newIdentityUser.Value, createUser.Roles[0]);
+        var token = new CreateToken(_configuration).GenerateJwtToken(newIdentityUser.Value, createUser.Roles);
 
         string query = @"INSERT INTO ApplicationUsers (IdentityUserId, ProfileImage, ProfileImagePath)
             OUTPUT INSERTED.IdentityUserId
@@ -180,12 +190,12 @@ public class UserRepository : IUserRepository
 
         if (identityUser == null)
         {
-            return Result.Fail("Usuário não encontrado. Por favor, verifique suas credenciais e tente novamente.", new UserLogin(string.Empty, new UserMapping()));
+            return Result.Fail("Usuário não encontrado. Por favor, verifique suas credenciais e tente novamente.");
         }
 
         if (!await _userManager.CheckPasswordAsync(identityUser, userLogin.Password))
         {
-            return Result.Fail("Senha incorreta. Por favor, verifique suas credenciais e tente novamente.", new UserLogin(string.Empty, new UserMapping()));
+            return Result.Fail("Senha incorreta. Por favor, verifique suas credenciais e tente novamente.");
         }
 
         var roles = await _userManager.GetRolesAsync(identityUser);
@@ -211,7 +221,7 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<Result<bool>> UpdateUserAsync(ExtensionUserIdentity userDTO, string userId, CancellationToken cancellationToken)
+    public async Task<Result<bool>> UpdateUserAsync(IdentityUserExtension userDTO, string userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

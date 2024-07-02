@@ -2,7 +2,7 @@
 
 namespace NerdCritica.TestProject.Domain.UserTests;
 
-public class IdentityExtensionUserTests
+public class IdentityUserExtensionTests
 {
     public static readonly List<string> ValidRoles = new List<string> { "ah" };
 
@@ -17,10 +17,10 @@ public class IdentityExtensionUserTests
     {
         var profileImage = new byte[1];
 
-        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage,
+        var result = IdentityUserExtension.Create(userName, email, password, profileImage,
             profileImagePath, roles.ToList());
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(email, result.Value.Email);
         Assert.Equal(profileImagePath, result.Value.ProfileImagePath);
@@ -33,11 +33,11 @@ public class IdentityExtensionUserTests
     public void Create_WithInvalidData_ShouldReturnFailureResult(string userName, string email, string password,
         byte[] profileImage, string profileImagePath, string expectedErrorMessage, string[] roles)
     {
-        var result = ExtensionUserIdentity.Create(userName, email, password, profileImage, profileImagePath,
+        var result = IdentityUserExtension.Create(userName, email, password, profileImage, profileImagePath,
             roles.ToList());
 
-        Assert.False(result.Success);
-        Assert.Empty(result.Value.Email);
+        Assert.True(result.IsFailure);
+        Assert.Null(result.Value);
         Assert.NotEmpty(result.Errors);
         Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }

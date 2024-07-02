@@ -22,8 +22,7 @@ public class FavoriteMovie
 
         if (result.Count > 0)
         {
-            var emptyFavoriteMovie = new FavoriteMovie(Guid.Empty, string.Empty);
-            return Result.AddErrors(result, emptyFavoriteMovie);
+            return Result.Fail(result);
         }
 
         var favoriteMovie = new FavoriteMovie(moviePostId, identityUserId);

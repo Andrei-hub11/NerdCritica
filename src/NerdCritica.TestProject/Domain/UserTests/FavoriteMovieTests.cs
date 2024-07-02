@@ -12,7 +12,7 @@ public class FavoriteMovieTests
 
         var result = FavoriteMovie.Create(moviePostId, identityUserId);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(moviePostId, result.Value.MoviePostId);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);

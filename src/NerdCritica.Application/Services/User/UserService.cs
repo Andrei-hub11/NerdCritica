@@ -43,7 +43,7 @@ public class UserService : IUserService
         {
             var result = await _imagesService.GetProfileImageAsync(createUserRequestDTO.ProfileImage);
 
-            var newUser = ExtensionUserIdentity.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
+            var newUser = IdentityUserExtension.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
                 createUserRequestDTO.Password, result.ProfileImageBytes, result.ProfileImagePath, createUserRequestDTO.Roles);
 
             if (newUser.IsFailure)
@@ -58,10 +58,7 @@ public class UserService : IUserService
             if (userContextCreation.IsFailure || userContextCreation.Value.UserId == string.Empty)
             {
                 var exception = CreateUserErrorHelper.GetExceptionFromResult(userContextCreation);
-                if (exception != null)
-                {
                     throw exception;
-                }
             }
 
             var userCreated = await _userRepository.GetUserByIdAsync(userContextCreation.Value.UserId, cancellationToken);
@@ -227,6 +224,13 @@ public class UserService : IUserService
             var favoriteMovieValited = FavoriteMovie.Create(addFavoriteMovieRequestDTO.MoviePostId,
                 addFavoriteMovieRequestDTO.IdentityUserId);
 
+            if (favoriteMovieValited.IsFailure)
+            {
+                var errorMessages = favoriteMovieValited.Errors.Select(error => error.Description).ToList();
+                throw new ValidationException("Os campos de criação de usúario não foram preenchidos corretamente.",
+                    errorMessages);
+            }
+
             bool isCreate = await _userRepository.AddFavoriteMovieAsync(favoriteMovieValited.Value, cancellationToken);
 
             return isCreate;
@@ -244,7 +248,7 @@ public class UserService : IUserService
         {
             var result = await _imagesService.GetProfileImageAsync(userDTO.ProfileImage);
 
-            var validatedUser = ExtensionUserIdentity.From(userDTO.Username, userDTO.Email,
+            var validatedUser = IdentityUserExtension.From(userDTO.Username, userDTO.Email,
                 result.ProfileImageBytes, result.ProfileImagePath);
 
             if (validatedUser.IsFailure)
@@ -289,13 +293,13 @@ public class UserService : IUserService
     {
         var errors = new Dictionary<string, List<string>>();
 
-        var emailErrors = ExtensionUserIdentity.ValidateEmail(request.Email);
+        var emailErrors = IdentityUserExtension.ValidateEmail(request.Email);
         if (emailErrors.Count > 0)
         {
             errors.Add("Email", emailErrors.Select(e => e.Description).ToList());
         }
 
-        var passwordErrors = ExtensionUserIdentity.ValidatePassword(request.NewPassword);
+        var passwordErrors = IdentityUserExtension.ValidatePassword(request.NewPassword);
         if (passwordErrors.Count > 0)
         {
             errors.Add("Password", passwordErrors.Select(e => e.Description).ToList());

@@ -26,7 +26,7 @@ public class MoviePostTests
            movieBackdropImage, moviePostTitle, moviePostDescription, category, director, releaseDate, runTime);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(creatorUserId, result.Value.CreatorUserId);
         Assert.Equal(movieImagePath, result.Value.MovieImagePath);
@@ -59,7 +59,7 @@ public class MoviePostTests
         var result = MoviePost.Create(creatorUserId, moviePostImagePath, movieBackdropPath, moviePostImage,
            movieBackdropImage, moviePostTitle, moviePostDescription, category, director, releaseDate, runTime);
 
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Errors);
         Assert.Contains($"{creatorUserId} não é um id válido.",
             result.Errors.Select(e => e.Description));
@@ -92,7 +92,7 @@ public class MoviePostTests
         var result = MoviePost.From(movieImagePath, movieBackdropPath, movieImage, 
             movieBackdropImage, movieTitle, movieDescription, category, director, releaseDate, runTime);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.Equal(movieImagePath, result.Value.MovieImagePath);
         Assert.Equal(movieBackdropPath, result.Value.MovieBackdropImagePath);
         Assert.Equal(movieImage, result.Value.MovieImage);
@@ -117,7 +117,7 @@ public class MoviePostTests
             "", "", "", "", releaseDate, runTime);
 
        
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.Contains("A imagem não pode ter mais que dois 2 megabytes de tamanho.",
             result.Errors.Select(e => e.Description));
         Assert.Contains("A imagem de fundo não pode ter mais que dois 2 megabytes de tamanho.",

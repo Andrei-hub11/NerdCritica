@@ -1,6 +1,4 @@
-﻿
-
-using NerdCritica.Domain.Entities.Aggregates;
+﻿using NerdCritica.Domain.Entities.Aggregates;
 
 namespace NerdCritica.TestProject.Domain.MovieTests;
 
@@ -22,7 +20,7 @@ public class CastMovieTests
     {
         var result = CastMember.Create(memberName, characterName, memberImage, memberImagePath, roleType);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(memberName, result.Value.MemberName);
         Assert.Equal(characterName, result.Value.CharacterName);
@@ -39,7 +37,7 @@ public class CastMovieTests
     {
         var result = CastMember.Create(memberName, characterName, memberImage, memberImagePath, roleType);
 
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Errors);
         Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }
@@ -90,7 +88,7 @@ public class CastMovieTests
         var result = CastMember.From(memberName, characterName, memberImage, memberImagePath, roleType, 
             castMemberId);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.NotEqual(Guid.Empty, result.Value.CastMemberId);
         Assert.Equal(memberName, result.Value.MemberName);
@@ -109,7 +107,7 @@ public class CastMovieTests
        
         var result = CastMember.From(memberName, characterName, memberImage, memberImagePath, roleType, castMemberId);
 
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Errors);
         Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }

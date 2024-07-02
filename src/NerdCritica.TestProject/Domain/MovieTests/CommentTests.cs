@@ -13,7 +13,7 @@ public class CommentTests
 
         var result = Comment.Create(ratingId, identityUserId, content);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(ratingId, result.Value.RatingId);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);
@@ -29,8 +29,8 @@ public class CommentTests
 
         var result = Comment.Create(ratingId, identityUserId, invalidContent);
 
-        Assert.False(result.Success);
-        Assert.Empty(result.Value.Content);
+        Assert.True(result.IsFailure);
+        Assert.Null(result.Value);
         Assert.NotEmpty(result.Errors);
         Assert.Contains("O comentário do post não pode estar vazio",
             result.Errors.Select(e => e.Description));
@@ -44,7 +44,7 @@ public class CommentTests
 
         var result = Comment.From(identityUserId, content);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);
         Assert.Equal(content, result.Value.Content);
     }
@@ -62,7 +62,7 @@ public class CommentTests
 
         var result = Comment.From(identityUserId, invalidContent);
 
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Errors);
         Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }

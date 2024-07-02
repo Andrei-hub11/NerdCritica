@@ -16,7 +16,7 @@ public class MovieRatingTests
         var result = MovieRating.Create(moviePostId, identityUserId, rating);
 
         // Assert
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.NotNull(result.Value);
         Assert.Equal(moviePostId, result.Value.MoviePostId);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);
@@ -32,7 +32,7 @@ public class MovieRatingTests
 
         var result = MovieRating.Create(moviePostId, identityUserId, invalidRating);
 
-        Assert.False(result.Success);
+        Assert.True(result.IsFailure);
         Assert.NotEmpty(result.Errors);
         Assert.Contains("A avaliação não pode ser maior que 5.",
             result.Errors.Select(e => e.Description));
@@ -46,7 +46,7 @@ public class MovieRatingTests
 
         var result = MovieRating.From(identityUserId, rating);
 
-        Assert.True(result.Success);
+        Assert.False(result.IsFailure);
         Assert.Equal(identityUserId, result.Value.IdentityUserId);
         Assert.Equal(rating, result.Value.Rating);
     }
@@ -62,8 +62,8 @@ public class MovieRatingTests
 
         var result = MovieRating.From(identityUserId, invalidRating);
 
-        Assert.False(result.Success);
-        Assert.NotEqual(invalidRating, result.Value.Rating);
+        Assert.True(result.IsFailure);
+        Assert.Null(result.Value);
         Assert.NotEmpty(result.Errors);
         Assert.Contains(expectedErrorMessage, result.Errors.Select(e => e.Description));
     }

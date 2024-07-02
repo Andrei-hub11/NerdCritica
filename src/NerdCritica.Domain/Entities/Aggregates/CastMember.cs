@@ -43,8 +43,7 @@ public class CastMember
 
         if (result.Count > 0)
         {
-            var emptyCastMovie = new CastMember(string.Empty, string.Empty, new byte[0], string.Empty, 0);
-            return Result.AddErrors(result, emptyCastMovie);
+            return Result.Fail(result);
         }
 
         var castMovie = new CastMember(memberName, characterName, memberImage, memberImagePath, roleType);
@@ -62,8 +61,7 @@ public class CastMember
 
         if (result.Count > 0)
         {
-            var emptyCastMovie = new CastMember(string.Empty, string.Empty, new byte[0], string.Empty, 0);
-            return Result.AddErrors(result, emptyCastMovie);
+            return Result.Fail(result);
         }
 
         var castMovie = new CastMember(memberName, characterName, memberImage, memberImagePath, roleType,

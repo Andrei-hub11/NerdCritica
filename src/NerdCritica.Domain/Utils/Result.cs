@@ -1,69 +1,65 @@
-﻿
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace NerdCritica.Domain.Utils;
 
-public class Error
-{
-    public string Description { get; }
-
-    public Error(string description)
-    {
-        Description = description;
-    }
-}
-
 public class Result
 {
-    private List<Error> _errors;
-    protected Result(bool success, List<Error> error)
+    private readonly List<Error> _errors;
+
+    protected Result(List<Error> error)
     {
-        Success = success;
         _errors = error;
     }
 
-    public bool Success { get; }
     public IReadOnlyList<Error> Errors => _errors;
-    public bool IsFailure => !Success;
 
-    public static Result AddError(List<Error> errors)
+    public static Result<List<Error>> Fail(string errorMessage)
     {
-        return new Result(false, errors);
+        return new Result<List<Error>>(new List<Error>(), true, new List<Error> { new Error(errorMessage) });
     }
 
-    public static Result<T> AddErrors<T>(List<Error> errors, T defaultValue)
+    public static Result<List<Error>> Fail(List<Error> errors)
     {
-        return new Result<T>(defaultValue,false, errors);
+        return new Result<List<Error>>(new List<Error>(), true, errors);
     }
 
-    public static Result Fail(string description)
-    {
-        return new Result(false, new List<Error> { new Error(description) });
-    }
-
-    public static Result<T> Fail<T>(string description, T defaultValue)
-    {
-        return new Result<T>(defaultValue, false, new List<Error> { new Error(description) });
-    }
-
-    public static Result Ok()
-    {
-        return new Result(true, new List<Error>());
-    }
-
-    public static Result<T> Ok<T>(T value)
-    {
-        return new Result<T>(value, true, new List<Error>());
-    }
+    public static Result<T> Ok<T>(T value) => new Result<T>(value, false, new List<Error>());
 }
 
 public class Result<T> : Result
 {
-    protected internal Result(T value, bool success, List<Error> error)
-        : base(success, error)
+    public T? Value { get; }
+    [MemberNotNullWhen(false, nameof(Value))]
+    [MemberNotNullWhen(true, nameof(Error))]
+    public bool IsFailure { get; }
+    public Error? Error
     {
-        Value = value;
+        get
+        {
+            if (!IsFailure)
+            {
+                return new Error("Não há nenhum Error.");
+            }
+
+            return Errors[0];
+        }
     }
 
-    public T Value { get; set; }
+    protected internal Result(T? value, bool success, List<Error> error)
+        : base(error)
+    {
+        Value = value;
+        IsFailure = success;
+    }
+
+    // Operador implícito para criar um Result<T> a partir de um valor
+    public static implicit operator Result<T>(T value) => new Result<T>(value, false, new List<Error>());
+
+    public static implicit operator Result<T>(string description) =>
+     new Result<T>(default, false, new List<Error> { new Error(description) });
+
+    public static implicit operator Result<T>(Result<List<Error>> errorResult)
+    {
+        return new Result<T>(default, true, errorResult.Errors.ToList());
+    }
 }

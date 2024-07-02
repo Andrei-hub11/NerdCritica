@@ -28,9 +28,7 @@ public class Comment
 
         if (result.Count > 0)
         {
-            var emptyComment = new Comment(Guid.Empty, string.Empty,
-                string.Empty);
-            return Result.AddErrors(result, emptyComment);
+            return Result.Fail(result);
         }
 
         var comment = new Comment(ratingId, identityUserId, content);
@@ -45,9 +43,7 @@ public class Comment
 
         if (result.Count > 0)
         {
-            var emptyComment = new Comment(Guid.Empty, string.Empty,
-                string.Empty);
-            return Result.AddErrors(result, emptyComment);
+            return Result.Fail(result);
         }
 
         var newComment = new Comment(identityUserId, content);

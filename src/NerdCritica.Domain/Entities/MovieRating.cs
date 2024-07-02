@@ -30,8 +30,7 @@ public class MovieRating
 
         if (result.Count > 0)
         {
-            var emptyMoviePost = new MovieRating(Guid.Empty, string.Empty, 0);
-            return Result.AddErrors(result, emptyMoviePost);
+            return Result.Fail(result);
         }
 
         var moviePost = new MovieRating(moviePostId, identityUserId, rating);
@@ -46,8 +45,7 @@ public class MovieRating
 
         if (result.Count > 0)
         {
-            var emptyMoviePost = new MovieRating(Guid.Empty, string.Empty, 0);
-            return Result.AddErrors(result, emptyMoviePost);
+            return Result.Fail(result);
         }
 
         var newRating = new MovieRating(identityUserId, rating);
