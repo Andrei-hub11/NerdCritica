@@ -1,9 +1,11 @@
 ﻿using NerdCritica.Domain.Utils.Exceptions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NerdCritica.Domain.Utils;
 
 public class CreateUserErrorHelper
 {
+    [return: NotNull]
     public static Exception GetExceptionFromResult(Result result)
     {
         if (result.Errors == null || !result.Errors.Any())
