@@ -10,8 +10,8 @@ public static class AuthenticationExtensions
     public static void AddJwtAuthentication(this IServiceCollection services, ConfigurationManager configuration)
     {
         var jwtSettings = configuration.GetSection("Jwt");
-        var key = string.IsNullOrEmpty(jwtSettings["Key"]) ? Array.Empty<byte>() : Encoding.ASCII.
-            GetBytes(jwtSettings["Key"] ?? string.Empty);
+        var key =  Encoding.ASCII.
+            GetBytes(jwtSettings["Key"] ?? throw new NullReferenceException("A Key dos jwtSettings não está presente"));
 
         services.AddAuthentication(options =>
         {
