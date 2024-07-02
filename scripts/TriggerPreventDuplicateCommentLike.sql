@@ -1,6 +1,6 @@
 CREATE OR ALTER TRIGGER TriggerPreventDuplicateCommentLike
 ON CommentLike
-AFTER INSERT
+INSTEAD OF INSERT
 AS
 BEGIN
     IF EXISTS (
@@ -10,6 +10,11 @@ BEGIN
     )
     BEGIN
         RAISERROR ('Já existe um CommentLike para este IdentityUserId e CommentId.', 16, 1);
-        ROLLBACK TRANSACTION;
+        RETURN; -- Retorna sem fazer a inserção
     END;
+
+    -- Se não houver duplicatas, faz a inserção normalmente
+    INSERT INTO CommentLike (LikeId, IdentityUserId, CommentId)
+    SELECT LikeId, IdentityUserId, CommentId
+    FROM inserted;
 END;
