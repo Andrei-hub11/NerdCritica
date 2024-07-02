@@ -63,21 +63,22 @@ public class UserController : ControllerBase
             return StatusCode(499);
         }
 
-        var success = await _userService.VerifyResetPasswordAsync(request, cancellationToken);
-        if (!success)
+        var isSuccess = await _userService.VerifyResetPasswordAsync(request, cancellationToken);
+
+        if (!isSuccess)
         {
             return BadRequest("Token inválido ou token expirou");
         }
 
-        return Ok();
+        return Ok(new { Success = isSuccess });
     }
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgetPasswordRequestDTO request, CancellationToken cancellationToken)
     {
-        var result = await _userService.ForgotPasswordAsync(request.Email, cancellationToken);
+        var isSuccess = await _userService.ForgotPasswordAsync(request.Email, cancellationToken);
 
-        return Ok(result);
+        return Ok(new { Success = isSuccess});
     }
 
     [HttpPost("register")]
@@ -131,7 +132,7 @@ public class UserController : ControllerBase
 
         bool isAdded = await _userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken);
 
-        return Ok(isAdded);
+        return Ok(new { Success = isAdded });
     }
 
     [Authorize]
@@ -160,7 +161,7 @@ public class UserController : ControllerBase
 
         if (isUpdated)
         {
-            return Ok(isUpdated);
+            return Ok(new { Success = isUpdated });
         }
         else
         {
@@ -181,6 +182,6 @@ public class UserController : ControllerBase
         bool isRemoved = await _userService.RemoveFavoriteMovie(removeFavoriteMovie.FavoriteMovieId, 
             removeFavoriteMovie.IdentityUserId, cancellationToken);
 
-        return Ok(isRemoved);
+        return Ok(new { Success = isRemoved });
     }
 }

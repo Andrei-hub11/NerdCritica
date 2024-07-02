@@ -1,7 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using NerdCritica.Domain.DTOs.MappingsDapper;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace NerdCritica.Application.Services.Token;
 
@@ -45,5 +49,38 @@ public class TokenService: ITokenService
             var computedHash = hmac.ComputeHash(tokenBytes);
             return tokenHash.SequenceEqual(computedHash);
         }
+    }
+
+    public string GenerateJwtToken(UserMapping user, IEnumerable<string> roles)
+    {
+        var claims = new List<Claim>();
+
+        if (!string.IsNullOrWhiteSpace(user.IdentityUserId) && !string.IsNullOrWhiteSpace(user.UserName))
+        {
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.IdentityUserId));
+            claims.Add(new Claim(ClaimTypes.Name, user.UserName));
+        }
+        else
+        {
+            new ArgumentNullException();
+        }
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] 
+            ?? throw new NullReferenceException("A Key dos Jwt não está presente")));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            _configuration["Jwt:Issuer"],
+            _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -13,9 +13,9 @@ public interface IUserRepository
     Task<string?> GetUserRoleAsync(string userId, CancellationToken cancellationToken);
     Task<PasswordResetTokenMapping?> GetPasswordResetTokenAsync(string identityUserId, CancellationToken cancellationToken);
     Task<IEnumerable<FavoriteMovieMapping>> GetFavoriteMovies(string identityUserId, CancellationToken cancellationToken);
-    Task<Result<UserCreationTokenAndId>> CreateUserAsync(IdentityUserExtension createUserRequestDTO);
+    Task<Result<string>> CreateUserAsync(IdentityUserExtension createUserRequestDTO);
     Task CreatePasswordResetTokenAsync(string identityUserId, string token);
-    Task<Result<UserLogin>> LoginUserAsync(UserLoginRequestDTO userLogin, CancellationToken cancellationToken);
+    Task<Result<bool>> CheckUserPasswordAsync(UserLoginRequestDTO userLogin, CancellationToken cancellationToken);
     Task<bool> AddFavoriteMovieAsync(FavoriteMovie addFavoriteMovieRequestDTO, CancellationToken cancellationToken);
     Task<Result<bool>> UpdateUserAsync(IdentityUserExtension userDTO, string userId, CancellationToken cancellationToken);
     Task<bool> UpdateUserPassword(string userEmail, string newPassword);

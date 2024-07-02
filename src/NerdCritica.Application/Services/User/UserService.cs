@@ -36,50 +36,6 @@ public class UserService : IUserService
         _mapper = mapper;
     }
 
-    public async Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var result = await _imagesService.GetProfileImageAsync(createUserRequestDTO.ProfileImage);
-
-            var newUser = IdentityUserExtension.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
-                createUserRequestDTO.Password, result.ProfileImageBytes, result.ProfileImagePath, createUserRequestDTO.Roles);
-
-            if (newUser.IsFailure)
-            {
-                var errorMessages = newUser.Errors.Select(error => error.Description).ToList();
-                throw new ValidationException("Os campos de criação de usúario não foram preenchidos corretamente.",
-                    errorMessages);
-            }
-
-            var userContextCreation = await _userRepository.CreateUserAsync(newUser.Value);
-
-            if (userContextCreation.IsFailure || userContextCreation.Value.UserId == string.Empty)
-            {
-                var exception = CreateUserErrorHelper.GetExceptionFromResult(userContextCreation);
-                    throw exception;
-            }
-
-            var userCreated = await _userRepository.GetUserByIdAsync(userContextCreation.Value.UserId, cancellationToken);
-
-            ThrowHelper.ThrowNotFoundExceptionIfNull(userCreated, $"O usúario com id {userContextCreation.Value.UserId} não foi encontrado");
-
-            var userDTO = _mapper.Map<ProfileUserResponseDTO>(userCreated);
-            var role = await _userRepository.GetUserRoleAsync(userCreated.IdentityUserId, cancellationToken);
-
-            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {userCreated.IdentityUserId} não foi encontrado");
-
-            return new AuthOperationResponseDTO(userContextCreation.Value.Token, userDTO, role);
-
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-
-    }
-
     public async Task<ProfileUserResponseDTO> GetUserByIdAsync(string userId, CancellationToken cancellationToken)
     {
         try
@@ -112,6 +68,54 @@ public class UserService : IUserService
         {
             throw;
         }
+    }
+
+    public async Task<AuthOperationResponseDTO> CreateUserAsync(CreateUserRequestDTO createUserRequestDTO,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _imagesService.GetProfileImageAsync(createUserRequestDTO.ProfileImage);
+
+            var newUser = IdentityUserExtension.Create(createUserRequestDTO.UserName, createUserRequestDTO.Email,
+                createUserRequestDTO.Password, result.ProfileImageBytes, result.ProfileImagePath, createUserRequestDTO.Roles);
+
+            if (newUser.IsFailure)
+            {
+                var errorMessages = newUser.Errors.Select(error => error.Description).ToList();
+                throw new ValidationException("Os campos de criação de usúario não foram preenchidos corretamente.",
+                    errorMessages);
+            }
+
+            var userContextCreation = await _userRepository.CreateUserAsync(newUser.Value);
+
+            if (userContextCreation.IsFailure)
+            {
+                var exception = CreateUserErrorHelper.GetExceptionFromResult(userContextCreation);
+                    throw exception;
+            }
+
+            var userCreated = await _userRepository.GetUserByIdAsync(userContextCreation.Value, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(userCreated, $"O usúario com id {userContextCreation.Value} não foi encontrado");
+
+            var userDTO = _mapper.Map<ProfileUserResponseDTO>(userCreated);
+            var role = await _userRepository.GetUserRoleAsync(userCreated.IdentityUserId, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {userCreated.IdentityUserId} não foi encontrado");
+            
+            var roleList = new List<string> { role };
+
+            var token = _tokenService.GenerateJwtToken(userCreated, roleList);
+
+            return new AuthOperationResponseDTO(token, userDTO, role);
+
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
     }
 
     public async Task<bool> ForgotPasswordAsync(string email, CancellationToken cancellationToken)
@@ -165,27 +169,35 @@ public class UserService : IUserService
         try
         {
 
-            var userContextLogin = await _userRepository.LoginUserAsync(user, cancellationToken);
+            var validPassword = await _userRepository.CheckUserPasswordAsync(user, cancellationToken);
 
-            if (userContextLogin.IsFailure)
+            if (validPassword.IsFailure)
             {
-                if (userContextLogin.Errors[0].Description == "Senha incorreta. Por favor, verifique suas credenciais e tente novamente.")
+                if (validPassword.Errors[0].Description == "Senha incorreta. Por favor, verifique suas credenciais e tente novamente.")
                 {
-                    var errorMessages = userContextLogin.Errors.Select(error => error.Description).ToList();
+                    var errorMessages = validPassword.Errors.Select(error => error.Description).ToList();
                     throw new BadRequestException(string.Join(", ", errorMessages));
                 }
 
-                var notFoundErrors = userContextLogin.Errors.Select(error => error.Description).ToList();
+                var notFoundErrors = validPassword.Errors.Select(error => error.Description).ToList();
                 throw new NotFoundException(string.Join(", ", notFoundErrors));
             }
 
-            var userDTO = _mapper.Map<ProfileUserResponseDTO>(userContextLogin.Value.User);
+            var result = await _userRepository.GetUserByEmailAsync(user.Email, cancellationToken);
 
-            var role = await _userRepository.GetUserRoleAsync(userContextLogin.Value.User.IdentityUserId, cancellationToken);
+            ThrowHelper.ThrowNotFoundExceptionIfNull(result, $"O usúario com o email {user.Email} não foi encontrado");
 
-            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {userContextLogin.Value.User.IdentityUserId} não foi encontrado");
+            var userDTO = _mapper.Map<ProfileUserResponseDTO>(result);
 
-            return new AuthOperationResponseDTO(userContextLogin.Value.Token, userDTO, role);
+            var role = await _userRepository.GetUserRoleAsync(result.IdentityUserId, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(role, $"O role do usúario com id {result.IdentityUserId} não foi encontrado");
+
+            var roleList = new List<string> { role };
+
+            var token = _tokenService.GenerateJwtToken(result, roleList);
+
+            return new AuthOperationResponseDTO(token, userDTO, role);
 
         }
         catch (Exception)
@@ -254,7 +266,7 @@ public class UserService : IUserService
             if (validatedUser.IsFailure)
             {
                 var errorMessages = validatedUser.Errors.Select(error => error.Description).ToList();
-                throw new ValidationException("Os campos de criação de usúario não preenchidos corretamente.",
+                throw new ValidationException("Os campos não preenchidos corretamente.",
                     errorMessages);
             }
 
