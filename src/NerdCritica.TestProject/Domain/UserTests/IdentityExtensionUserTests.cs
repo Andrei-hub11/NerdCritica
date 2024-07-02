@@ -44,16 +44,16 @@ public class IdentityExtensionUserTests
 
     public static IEnumerable<object[]> GetInvalidUserTestData()
     {
-        yield return new object[] { "Andy", "", "StrongPassword1", new byte[1], "profile.jpg", "O email é obrigatório.", new string[] { "Moderator" } };
-        yield return new object[] { "Andy", "invalidemail", "StrongPassword1", new byte[1], "profile.jpg", "Email inválido.", new string[] { "Moderator" } };
-        yield return new object[] { "Andy", "example@example.com", "", new byte[1], "profile.jpg", "A senha é obrigatória.", new string[] { "Moderator" } };
-        yield return new object[] {"Andy", "example@example.com", "weak", new byte[1], "profile.jpg", "A senha deve ter pelo menos oito caracteres.",
+        yield return new object[] { "Andy", "", "StrongPassword1", new byte[1], "profile.jpg", "O email é obrigatório", new string[] { "Moderator" } };
+        yield return new object[] { "Andy", "invalidemail", "StrongPassword1", new byte[1], "profile.jpg", "Email inválido", new string[] { "Moderator" } };
+        yield return new object[] { "Andy", "example@example.com", "", new byte[1], "profile.jpg", "A senha é obrigatória", new string[] { "Moderator" } };
+        yield return new object[] {"Andy", "example@example.com", "weak", new byte[1], "profile.jpg", "A senha deve ter pelo menos oito caracteres",
         new string[] {"Moderator" } };
-        yield return new object[] {"Andy", "example@example.com", "WeakPassword", new byte[1], "profile.jpg", "Senha inválida. A senha deve ter pelo menos dois caracteres especiais.",
+        yield return new object[] {"Andy", "example@example.com", "WeakPassword", new byte[1], "profile.jpg", "Senha inválida. A senha deve ter pelo menos dois caracteres especiais",
         new string[] {"Moderator" } };
-        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[2 * 1024 * 1024 + 1], "profile.jpg", "A imagem não pode ter mais que dois 2 megabytes de tamanho.",
+        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[2 * 1024 * 1024 + 1], "profile.jpg", "A imagem não pode ter mais que dois 2 megabytes de tamanho",
         new string[] {"Moderator" } };
-        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[1], "profile.jpg", "O role fornecido não é válido.",
+        yield return new object[] {"Andy", "example@example.com", "StrongPassword1", new byte[1], "profile.jpg", "O role fornecido não é válido",
         new string[] {"InvalidRole" } };
     }
 }

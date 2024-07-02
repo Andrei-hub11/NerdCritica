@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.Images;
+using NerdCritica.Application.Services.Token;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.Common;
 using NerdCritica.Domain.DTOs.MappingsDapper;
@@ -28,6 +30,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
         var configuration = new MapperConfiguration(cfg =>
         {
@@ -46,7 +50,7 @@ public class UserAccountTests
             UserName: "testUser", Email: "test@example.com", ProfileImagePath: "profile.jpg");
       
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object, 
-            mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         var result = await userService.GetUserByIdAsync(identityUserId, cancellationToken);
 
@@ -65,13 +69,15 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
         var mapperMock = new Mock<IMapper>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync(userId, cancellationToken))
                           .ReturnsAsync(() => null);
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object, 
-           mockImageService.Object, mapperMock.Object);
+           mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         Assert.ThrowsAsync<NotFoundException>(() => userService.GetUserByIdAsync(userId, cancellationToken));
     }
@@ -90,6 +96,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetFavoriteMovies(identityUserId, cancellationToken))
                           .ReturnsAsync(favoriteMovies);
@@ -104,7 +112,7 @@ public class UserAccountTests
         var mapper = new Mapper(configuration);
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                 mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         var result = await userService.GetFavoriteMovies(identityUserId, cancellationToken);
 
@@ -131,6 +139,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetFavoriteMovies(identityUserId, cancellationToken))
                           .ReturnsAsync(new List<FavoriteMovieMapping>());
@@ -145,7 +155,7 @@ public class UserAccountTests
         var mapper = new Mapper(configuration);
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                  mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         var result = await userService.GetFavoriteMovies(identityUserId, cancellationToken);
 
@@ -174,6 +184,8 @@ public class UserAccountTests
         var userRepositoryMock = new Mock<IUserRepository>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
                           .ReturnsAsync(Result.Ok(new UserCreationTokenAndId(expectedUserId, expectedToken)));
@@ -205,7 +217,7 @@ public class UserAccountTests
                   Email: expectedEmail, ProfileImagePath: imagePath));
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-            mockImageService.Object, mapperMock.Object);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         var result = await userService.CreateUserAsync(createUserRequestDTO, cancellationToken);
 
@@ -249,6 +261,8 @@ public class UserAccountTests
         var userRepositoryMock = new Mock<IUserRepository>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
         var mapperMock = new Mock<IMapper>();
 
         userRepositoryMock.Setup(repo => repo.CreateUserAsync(It.IsAny<ExtensionUserIdentity>()))
@@ -262,7 +276,7 @@ public class UserAccountTests
                   });
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-            mockImageService.Object, mapperMock.Object);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         var exception = await Assert.ThrowsAsync<CreateUserException>(() =>
             userService.CreateUserAsync(createUserRequestDTO, cancellationToken));
@@ -291,6 +305,8 @@ public class UserAccountTests
         var userRepositoryMock = new Mock<IUserRepository>();
         var mapperMock = new Mock<IMapper>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
         var userManagerMock = new Mock<UserManager<IdentityUser>>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
@@ -311,7 +327,7 @@ public class UserAccountTests
                           .ReturnsAsync(expectedRole);
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-            mockImageService.Object, mapperMock.Object);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         var result = await userService.LoginUserAsync(userLoginRequestDTO, cancellationToken);
 
@@ -332,12 +348,14 @@ public class UserAccountTests
         var userLoginRequestDTO = new UserLoginRequestDTO(Email: email, Password: password);
         var cancellationToken = CancellationToken.None;
         var userRepositoryMock = new Mock<IUserRepository>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
         var mockImageService = new Mock<IImagesService>();
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                    mockImageService.Object, mapperMock.Object);
+                    mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         userRepositoryMock.Setup(repo => repo.LoginUserAsync(userLoginRequestDTO, cancellationToken))
                           .ReturnsAsync(Result.Fail(expectedErrorMessage, new UserLogin(string.Empty, 
@@ -371,6 +389,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
                           .ReturnsAsync(new UserMapping { });
@@ -385,7 +405,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         var result = await userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken);
 
@@ -405,6 +425,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
                           .ReturnsAsync(() => null);
@@ -441,7 +463,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken));
@@ -459,6 +481,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
                           .ReturnsAsync(() => null);
@@ -470,7 +494,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken));
@@ -488,6 +512,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByIdAsync("userId123", cancellationToken))
                           .ReturnsAsync(() => null);
@@ -505,7 +531,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.AddFavoriteMovieAsync(addFavoriteMovieRequestDTO, cancellationToken));
@@ -523,7 +549,6 @@ public class UserAccountTests
         var cancellationToken = CancellationToken.None;
         var userId = Guid.NewGuid().ToString();
         byte[] profileImageBytes = new byte[0];
-        var imagePath = "profile.jpg";
 
         var existingUser = new UserMapping
         {
@@ -537,6 +562,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
                           .ReturnsAsync(existingUser);
@@ -562,7 +589,7 @@ public class UserAccountTests
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                  mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         var result = await userService.UpdateUserAsync(updateUserRequestDTO, userId, cancellationToken);
 
@@ -584,10 +611,11 @@ public class UserAccountTests
         var cancellationToken = CancellationToken.None;
         var userId = Guid.NewGuid().ToString();
         byte[] profileImageBytes = new byte[0];
-        var imagePath = "profile.jpg";
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         mockImageService.Setup(service => service.GetProfileImageAsync(It.IsAny<string>()))
           .ReturnsAsync(new ProfileImage
@@ -606,7 +634,7 @@ public class UserAccountTests
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                  mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() =>
@@ -625,10 +653,11 @@ public class UserAccountTests
         var cancellationToken = CancellationToken.None;
         var userId = Guid.NewGuid().ToString();
         byte[] profileImageBytes = new byte[0];
-        var imagePath = "profile.jpg";
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         mockImageService.Setup(service => service.GetProfileImageAsync(It.IsAny<string>()))
           .ReturnsAsync(new ProfileImage
@@ -650,7 +679,7 @@ public class UserAccountTests
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                  mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         // Act & Assert
         await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -669,7 +698,6 @@ public class UserAccountTests
         var cancellationToken = CancellationToken.None;
         var userId = Guid.NewGuid().ToString();
         byte[] profileImageBytes = new byte[0];
-        var imagePath = "profile.jpg";
 
         var existingUser = new UserMapping
         {
@@ -682,6 +710,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), cancellationToken))
                           .ReturnsAsync(existingUser);
@@ -703,7 +733,7 @@ public class UserAccountTests
         var movieRepositoryMock = new Mock<IMoviePostRepository>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                  mockImageService.Object, mapper);
+            mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapper);
 
         // Act & Assert
         await Assert.ThrowsAsync<ValidationException>(() =>
@@ -720,6 +750,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetFavoriteMovies(identityUserId, cancellationToken))
                           .ReturnsAsync(new List<FavoriteMovieMapping>
@@ -735,7 +767,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         var result = await userService.RemoveFavoriteMovie(favoriteMovieId, identityUserId, cancellationToken);
 
@@ -751,6 +783,8 @@ public class UserAccountTests
 
         var userRepositoryMock = new Mock<IUserRepository>();
         var mockImageService = new Mock<IImagesService>();
+        var tokenServiceMock = new Mock<ITokenService>();
+        var emailServiceMock = new Mock<IEmailService>();
 
         userRepositoryMock.Setup(repo => repo.GetFavoriteMovies(identityUserId, cancellationToken))
                           .ReturnsAsync(new List<FavoriteMovieMapping>());
@@ -760,7 +794,7 @@ public class UserAccountTests
         var mapperMock = new Mock<IMapper>();
 
         var userService = new UserService(userRepositoryMock.Object, movieRepositoryMock.Object,
-                   mockImageService.Object, mapperMock.Object);
+                   mockImageService.Object, tokenServiceMock.Object, emailServiceMock.Object, mapperMock.Object);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             userService.RemoveFavoriteMovie(favoriteMovieId, identityUserId, cancellationToken));

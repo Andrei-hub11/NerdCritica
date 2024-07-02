@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
+using FluentEmail.Core;
+using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.Images;
+using NerdCritica.Application.Services.Token;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
+using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
@@ -15,13 +19,20 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IMoviePostRepository _moviePostRepository;
     private readonly IImagesService _imagesService;
+    private readonly ITokenService _tokenService;
+    private readonly IEmailService _emailService;
     private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository, IMoviePostRepository moviePostRepository, IImagesService imagesService, IMapper mapper)
+    private readonly static string url = "https://localhost:7299";
+
+    public UserService(IUserRepository userRepository, IMoviePostRepository moviePostRepository,
+        IImagesService imagesService, ITokenService tokenService, IEmailService emailService, IMapper mapper)
     {
         _userRepository = userRepository;
         _moviePostRepository = moviePostRepository;
         _imagesService = imagesService;
+        _tokenService = tokenService;
+        _emailService = emailService;
         _mapper = mapper;
     }
 
@@ -91,7 +102,7 @@ public class UserService : IUserService
 
     public async Task<ICollection<FavoriteMovieResponseDTO>> GetFavoriteMovies(string identityUserId, CancellationToken cancellationToken)
     {
-       try
+        try
         {
             var favoriteMovies = await _userRepository.GetFavoriteMovies(identityUserId, cancellationToken);
 
@@ -99,10 +110,56 @@ public class UserService : IUserService
                 .ToList();
 
             return favoriteMovieResponses;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
+    }
+
+    public async Task<bool> ForgotPasswordAsync(string email, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var user = await _userRepository.GetUserByEmailAsync(email, cancellationToken);
+
+            ThrowHelper.ThrowNotFoundExceptionIfNull(user, $"O usúario com email {email} não foi encontrado");
+
+            var token = _tokenService.GeneratePasswordResetToken(user);
+            await _userRepository.CreatePasswordResetTokenAsync(user.IdentityUserId, token);
+
+            var resetLink = $"{url}/api/v1/account/verify-password-reset?token={token}&email={Uri.EscapeDataString(email)}";
+
+            var emailObject = new EmailMetadata(email, "Aqui está o link para recuperar sua senha:",
+                $"<a href=\"{resetLink}\">link</a>");
+
+            await _emailService.Send(emailObject);
+
+            return true;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<bool> VerifyResetPasswordAsync(VerifyResetPasswordRequestDTO request, CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetUserByEmailAsync(request.Email, cancellationToken);
+
+        ThrowHelper.ThrowNotFoundExceptionIfNull(user, $"O usúario com email {request.Email} não foi encontrado");
+
+        bool isTokenValid = _tokenService.ValidatePasswordResetToken(request.Token);
+
+        var passwordResetTokenMapping = await _userRepository.GetPasswordResetTokenAsync(user.IdentityUserId, cancellationToken);
+
+        ThrowHelper.ThrowNotFoundExceptionIfNull(passwordResetTokenMapping,
+            $"O usuário com o email {request.Email} não possui um token de redefinição de senha. Por favor, solicite uma nova redefinição de senha.");
+
+        if (!isTokenValid || passwordResetTokenMapping.ExpirationDate < DateTime.Now)
+            return false;
+
+        return true;
     }
 
     public async Task<AuthOperationResponseDTO> LoginUserAsync(UserLoginRequestDTO user,
@@ -140,10 +197,10 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<bool> AddFavoriteMovieAsync(AddFavoriteMovieRequestDTO addFavoriteMovieRequestDTO, 
+    public async Task<bool> AddFavoriteMovieAsync(AddFavoriteMovieRequestDTO addFavoriteMovieRequestDTO,
         CancellationToken cancellationToken)
     {
-       try
+        try
         {
             var user = await _userRepository.GetUserByIdAsync(addFavoriteMovieRequestDTO.IdentityUserId,
                 cancellationToken);
@@ -167,26 +224,27 @@ public class UserService : IUserService
 
             ThrowHelper.ThrowNotFoundExceptionIfNull(movie, $"O post de filme com o id {addFavoriteMovieRequestDTO.MoviePostId} não existe.");
 
-            var favoriteMovieValited = FavoriteMovie.Create(addFavoriteMovieRequestDTO.MoviePostId, 
+            var favoriteMovieValited = FavoriteMovie.Create(addFavoriteMovieRequestDTO.MoviePostId,
                 addFavoriteMovieRequestDTO.IdentityUserId);
 
             bool isCreate = await _userRepository.AddFavoriteMovieAsync(favoriteMovieValited.Value, cancellationToken);
 
             return isCreate;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
     }
 
-    public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId, 
+    public async Task<ProfileUserResponseDTO> UpdateUserAsync(UpdateUserRequestDTO userDTO, string userId,
         CancellationToken cancellationToken)
     {
         try
         {
             var result = await _imagesService.GetProfileImageAsync(userDTO.ProfileImage);
 
-            var validatedUser =  ExtensionUserIdentity.From(userDTO.Username, userDTO.Email, 
+            var validatedUser = ExtensionUserIdentity.From(userDTO.Username, userDTO.Email,
                 result.ProfileImageBytes, result.ProfileImagePath);
 
             if (validatedUser.IsFailure)
@@ -210,7 +268,7 @@ public class UserService : IUserService
 
             if (!isUpdated.Value)
             {
-              throw new BadRequestException("A atualização do usúario falhou.");
+                throw new BadRequestException("A atualização do usúario falhou.");
             }
 
             var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
@@ -220,15 +278,42 @@ public class UserService : IUserService
             var userUpdated = _mapper.Map<ProfileUserResponseDTO>(user);
             return userUpdated;
 
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }
     }
 
+    public async Task<bool> UpdateUserPasswordAsync(UpdatePasswordRequestDTO request)
+    {
+        var errors = new Dictionary<string, List<string>>();
+
+        var emailErrors = ExtensionUserIdentity.ValidateEmail(request.Email);
+        if (emailErrors.Count > 0)
+        {
+            errors.Add("Email", emailErrors.Select(e => e.Description).ToList());
+        }
+
+        var passwordErrors = ExtensionUserIdentity.ValidatePassword(request.NewPassword);
+        if (passwordErrors.Count > 0)
+        {
+            errors.Add("Password", passwordErrors.Select(e => e.Description).ToList());
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationException("Um ou mais erro ocorreu", errors);
+        }
+
+        bool isReseted = await _userRepository.UpdateUserPassword(request.Email, request.NewPassword);
+
+        return isReseted;
+    }
+
     public async Task<bool> RemoveFavoriteMovie(Guid favoriteMovieId, string identityUserId, CancellationToken cancellationToken)
     {
-       try
+        try
         {
             var favoriteMovies = await _userRepository.GetFavoriteMovies(identityUserId, cancellationToken);
 
@@ -243,7 +328,8 @@ public class UserService : IUserService
             bool isRemoved = await _userRepository.RemoveFavoriteMovie(favoriteMovieId, identityUserId, cancellationToken);
 
             return isRemoved;
-        } catch (Exception)
+        }
+        catch (Exception)
         {
             throw;
         }

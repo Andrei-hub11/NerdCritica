@@ -1,6 +1,4 @@
-﻿
-
-using NerdCritica.Domain.ObjectValues;
+﻿using NerdCritica.Domain.ObjectValues;
 
 namespace NerdCritica.Application.Services.EmailService;
 

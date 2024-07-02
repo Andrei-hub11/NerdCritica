@@ -75,44 +75,64 @@ public class ExtensionUserIdentity
 
         if (string.IsNullOrWhiteSpace(userName))
         {
-            errors.Add(new Error("O nome do usúario é obrigatório."));
+            errors.Add(new Error("O nome do usúario é obrigatório"));
         }
 
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            errors.Add(new Error("O email é obrigatório."));
-        }
+        errors.AddRange(ValidateEmail(email));
 
-        if (!Regex.IsMatch(email, @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$"))
+        if (isCreate && password != null)
         {
-            errors.Add(new Error("Email inválido."));
-        }
-
-        if (isCreate && string.IsNullOrWhiteSpace(password))
-        {
-            errors.Add(new Error("A senha é obrigatória."));
-        }
-
-        if (isCreate && password != null && password.Length < 8)
-        {
-            errors.Add(new Error("A senha deve ter pelo menos oito caracteres."));
-        }
-
-        if (isCreate && password != null && !Regex.IsMatch(password,
-            @"(?:.*[!@#$%^&*]){2,}"))
-        {
-            errors.Add(new Error("Senha inválida. A senha deve ter pelo menos dois caracteres especiais."));
+            errors.AddRange(ValidatePassword(password));
         }
 
         if (imageProfile?.Length > 2 * 1024 * 1024)
         {
-            errors.Add(new Error("A imagem não pode ter mais que dois 2 megabytes de tamanho."));
+            errors.Add(new Error("A imagem não pode ter mais que dois 2 megabytes de tamanho"));
         }
 
         if (isCreate && roles != null && !roles.Contains("User") && 
                 !roles.Contains("Moderator") && !roles.Contains("Admin"))
         {
-            errors.Add(new Error("O role fornecido não é válido."));
+            errors.Add(new Error("O role fornecido não é válido"));
+        }
+
+        return errors;
+    }
+
+    public static List<Error> ValidateEmail(string email)
+    {
+        var errors = new List<Error>();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            errors.Add(new Error("O email é obrigatório"));
+        }
+
+        if (!Regex.IsMatch(email, @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$"))
+        {
+            errors.Add(new Error("Email inválido"));
+        }
+
+        return errors;
+    }
+
+    public static List<Error> ValidatePassword(string password)
+    {
+        var errors = new List<Error>();
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errors.Add(new Error("A senha é obrigatória"));
+        }
+
+        if (password.Length < 8)
+        {
+            errors.Add(new Error("A senha deve ter pelo menos oito caracteres"));
+        }
+
+        if (!Regex.IsMatch(password, @"(?:.*[!@#$%^&*]){2,}"))
+        {
+            errors.Add(new Error("Senha inválida. A senha deve ter pelo menos dois caracteres especiais"));
         }
 
         return errors;

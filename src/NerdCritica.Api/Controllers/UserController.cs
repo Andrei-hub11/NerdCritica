@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NerdCritica.Api.Utils.Helper;
-using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.User;
 using NerdCritica.Domain.Contracts;
 using NerdCritica.Domain.DTOs.User;
-using NerdCritica.Domain.Utils;
+using NerdCritica.Domain.Utils.Exceptions;
 
 namespace NerdCritica.Api.Controllers;
 
@@ -15,7 +13,6 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IUserContext _userContext;
-    //private readonly EmailService _emailService;
 
     public UserController(IUserService userService, IUserContext userContext)
     {
@@ -57,15 +54,31 @@ public class UserController : ControllerBase
         });
     }
 
-    //[HttpPost("forgot-password")]
-    //public async Task<IActionResult> ForgotPassword()
-    //{
-    //    EmailMetadata emailMetadata = new("seu-email@exemplo.com",
-    //"FluentEmail Test email",
-    //"This is a test email from FluentEmail.");
-    //    await _emailService.Send(emailMetadata);
-    //    return Ok();
-    //}
+    [HttpGet("verify-password-reset")]
+    public async Task<IActionResult> VerifyResetPassword([FromQuery] VerifyResetPasswordRequestDTO request,
+    CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(499);
+        }
+
+        var success = await _userService.VerifyResetPasswordAsync(request, cancellationToken);
+        if (!success)
+        {
+            return BadRequest("Token inválido ou token expirou");
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgetPasswordRequestDTO request, CancellationToken cancellationToken)
+    {
+        var result = await _userService.ForgotPasswordAsync(request.Email, cancellationToken);
+
+        return Ok(result);
+    }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserRequestDTO user,
@@ -122,7 +135,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("update/{identityUserId}")]
+    [HttpPut("{identityUserId}")]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestDTO user, string identityUserId,
       CancellationToken cancellationToken)
     {
@@ -138,6 +151,21 @@ public class UserController : ControllerBase
             Message = "A atualização foi bem-sucedida.",
             User = resultDTO
         });
+    }
+
+    [HttpPut("update-password")]
+    public async Task<IActionResult> UpdateUserPassword([FromBody] UpdatePasswordRequestDTO request)
+    {
+        bool isUpdated = await _userService.UpdateUserPasswordAsync(request);
+
+        if (isUpdated)
+        {
+            return Ok(isUpdated);
+        }
+        else
+        {
+            return StatusCode(500, "Ocorreu um erro ao atualizar a senha.");
+        }
     }
 
     [Authorize]

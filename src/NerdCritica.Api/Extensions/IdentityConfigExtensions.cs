@@ -10,6 +10,8 @@ public static class IdentityConfigExtensions
         services.AddIdentity<IdentityUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+
+        services.AddScoped<IPasswordHasher<IdentityUser>, PasswordHasher<IdentityUser>>();
     }
 
     public static void AddCustomAuthorization(this IServiceCollection services)

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.ObjectValues;
@@ -10,6 +9,7 @@ using NerdCritica.Domain.Repositories.User;
 using NerdCritica.Domain.Utils;
 using NerdCritica.Infrastructure.Context;
 using NerdCritica.Infrastructure.Extensions;
+using System.Threading;
 
 namespace NerdCritica.Infrastructure.Persistence.User;
 
@@ -82,6 +82,20 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<PasswordResetTokenMapping?> GetPasswordResetTokenAsync(string identityUserId, CancellationToken cancellationToken)
+    {
+        string query = @"SELECT * FROM PasswordResetTokens 
+        WHERE IdentityUserId = @IdentityUserId AND ExpirationDate > @CurrentDate";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            var passwordResetToken = await connection.QueryFirstOrDefaultAsync<PasswordResetTokenMapping>(new CommandDefinition(query, 
+                new { IdentityUserId = identityUserId, CurrentDate = DateTime.UtcNow}, cancellationToken: cancellationToken));
+
+            return passwordResetToken;
+        }
+    }
+
     public async Task<IEnumerable<FavoriteMovieMapping>> GetFavoriteMovies(string identityUserId,
         CancellationToken cancellationToken)
     {
@@ -145,6 +159,18 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task CreatePasswordResetTokenAsync(string identityUserId, string token)
+    {
+        string query = @"INSERT INTO PasswordResetTokens (IdentityUserId, Token, ExpirationDate) 
+        VALUES (@IdentityUserId, @Token, @ExpirationDate)";
+
+        using (var connection = _dapperContext.CreateConnection())
+        {
+            await connection.QueryAsync(query, new { IdentityUserId = identityUserId, 
+                Token = token, ExpirationDate = DateTime.Now.AddHours(1) });
+        }
+    }
+
     public async Task<Result<UserLogin>> LoginUserAsync(UserLoginRequestDTO userLogin,
          CancellationToken cancellationToken)
     {
@@ -185,11 +211,6 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public Task<MovieRatingResponseDTO> GetUserRatingAync(string userId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<Result<bool>> UpdateUserAsync(ExtensionUserIdentity userDTO, string userId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -220,6 +241,19 @@ public class UserRepository : IUserRepository
 
             return Result.Ok(true);
         }
+    }
+
+    public async Task<bool> UpdateUserPassword(string userEmail, string newPassword)
+    {
+        var user = await _userManager.FindByEmailAsync(userEmail);
+        if (user == null)
+            return false;
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+        return result.Succeeded;
     }
 
     public async Task<bool> RemoveFavoriteMovie(Guid favoriteMovieId, string identityUserId, CancellationToken cancellationToken)

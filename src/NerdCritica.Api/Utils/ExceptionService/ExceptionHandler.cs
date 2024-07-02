@@ -73,6 +73,16 @@ public class ExceptionHandler : IExceptionHandler
 
                 responseMessage = JsonConvert.SerializeObject(responseObject);
             }
+            else if (ex.DetailedErrors.Count > 1)
+            {
+                var responseObject = new
+                {
+                    ex.Message,
+                    Errors = ex.DetailedErrors
+                };
+
+                responseMessage = JsonConvert.SerializeObject(responseObject);
+            }
             else
             {
                 var responseObject = new
