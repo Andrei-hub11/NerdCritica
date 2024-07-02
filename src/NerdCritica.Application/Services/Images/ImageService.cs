@@ -142,8 +142,7 @@ public class ImageService : IImagesService
 
     private static string GetMovieImagePath(string fileName)
     {
-        string path = Path.Combine(API_ROOT_DIRECTORY, "wwwroot", "movies", "images", fileName);
-        return path.Replace("\\", "/");
+        return Path.Combine(API_ROOT_DIRECTORY, "wwwroot", "movies", "images", fileName);
     }
 
     private static string GetRelativeMovieImagePath(string fileName)
