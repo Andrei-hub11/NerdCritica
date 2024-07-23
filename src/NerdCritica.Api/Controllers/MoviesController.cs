@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NerdCritica.Api.Utils.Helper;
 using NerdCritica.Application.Services.Movies;
-using NerdCritica.Domain.DTOs.Movie;
+using NerdCritica.Contracts.DTOs.Movie;
 
 namespace NerdCritica.Api.Controllers;
 

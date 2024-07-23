@@ -1,7 +1,6 @@
-﻿using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.User;
+﻿using NerdCritica.Contracts.DTOs.MappingsDapper;
+using NerdCritica.Contracts.DTOs.User;
 using NerdCritica.Domain.Entities;
-using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Utils;
 
 namespace NerdCritica.Domain.Repositories.User;

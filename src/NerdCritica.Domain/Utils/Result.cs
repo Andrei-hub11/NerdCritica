@@ -45,11 +45,11 @@ public class Result<T> : Result
         }
     }
 
-    protected internal Result(T? value, bool success, List<Error> error)
+    protected internal Result(T? value, bool isFailure, List<Error> error)
         : base(error)
     {
         Value = value;
-        IsFailure = success;
+        IsFailure = isFailure;
     }
 
     // Operador implícito para criar um Result<T> a partir de um valor

@@ -1,8 +1,7 @@
 ﻿using NerdCritica.Application.Services.ImageServiceConfiguration;
+using NerdCritica.Contracts.DTOs.Movie;
 using NerdCritica.Domain.Common;
-using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Utils;
-using System.IO;
 
 namespace NerdCritica.Application.Services.Images;
 

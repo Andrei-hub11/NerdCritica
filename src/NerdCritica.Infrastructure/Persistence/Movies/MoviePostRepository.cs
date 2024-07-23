@@ -1,11 +1,9 @@
 ﻿using Dapper;
-using Microsoft.AspNetCore.Identity;
-using NerdCritica.Domain.DTOs.MappingsDapper;
+using NerdCritica.Contracts.DTOs.MappingsDapper;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;
 using NerdCritica.Infrastructure.Context;
-using System.ComponentModel.Design;
 
 
 namespace NerdCritica.Infrastructure.Persistence.Movies;

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Moq;
 using NerdCritica.Application.Services.Token;
-using NerdCritica.Domain.DTOs.MappingsDapper;
 using System.Text;
+using NerdCritica.Contracts.DTOs.MappingsDapper;
+
 
 namespace NerdCritica.TestProject.Services.TokenServices;
 

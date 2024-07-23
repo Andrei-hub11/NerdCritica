@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
-using NerdCritica.Domain.DTOs.User;
+using NerdCritica.Contracts.DTOs.MappingsDapper;
+using NerdCritica.Contracts.DTOs.Movie;
+using NerdCritica.Contracts.DTOs.User;
 
 namespace NerdCritica.Api.AutoMapperProfile;
 

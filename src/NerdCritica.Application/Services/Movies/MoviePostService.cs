@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using NerdCritica.Application.DTOMappers;
 using NerdCritica.Application.Services.Images;
-using NerdCritica.Domain.DTOs.Movie;
+using NerdCritica.Contracts.DTOs.Movie;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;

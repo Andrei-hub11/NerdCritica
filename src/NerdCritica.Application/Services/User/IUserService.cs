@@ -1,5 +1,4 @@
-﻿using NerdCritica.Domain.DTOs.Movie;
-using NerdCritica.Domain.DTOs.User;
+﻿using NerdCritica.Contracts.DTOs.User;
 
 namespace NerdCritica.Application.Services.User;
 

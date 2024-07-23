@@ -1,6 +1,4 @@
-﻿
-
-using NerdCritica.Domain.DTOs.User;
+﻿using NerdCritica.Contracts.DTOs.User;
 
 namespace NerdCritica.Domain.ObjectValues;
 

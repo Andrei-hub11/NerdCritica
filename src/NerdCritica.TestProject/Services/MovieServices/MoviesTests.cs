@@ -2,12 +2,11 @@
 using Moq;
 using NerdCritica.Application.Services.Images;
 using NerdCritica.Application.Services.Movies;
-using NerdCritica.Application.Services.User;
+using NerdCritica.Contracts.DTOs.MappingsDapper;
+using NerdCritica.Contracts.DTOs.Movie;
+using NerdCritica.Contracts.DTOs.User;
 using NerdCritica.Domain.Common;
 using NerdCritica.Domain.Contracts;
-using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
-using NerdCritica.Domain.DTOs.User;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Repositories.Movies;

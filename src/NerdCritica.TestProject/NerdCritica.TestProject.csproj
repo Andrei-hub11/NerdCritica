@@ -28,6 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NerdCritica.Api\NerdCritica.Api.csproj" />
     <ProjectReference Include="..\NerdCritica.Application\NerdCritica.Application.csproj" />
+    <ProjectReference Include="..\NerdCritica.Contracts\NerdCritica.Contracts.csproj" />
     <ProjectReference Include="..\NerdCritica.Domain\NerdCritica.Domain.csproj" />
     <ProjectReference Include="..\NerdCritica.Infrastructure\NerdCritica.Infrastructure.csproj" />
   </ItemGroup>

@@ -1,6 +1,5 @@
-﻿using NerdCritica.Domain.Contracts;
-using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
+﻿using NerdCritica.Contracts.DTOs.MappingsDapper;
+using NerdCritica.Contracts.DTOs.Movie;
 
 namespace NerdCritica.Application.DTOMappers;
 

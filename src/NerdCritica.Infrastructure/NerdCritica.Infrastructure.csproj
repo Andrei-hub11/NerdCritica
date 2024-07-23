@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NerdCritica.Contracts\NerdCritica.Contracts.csproj" />
     <ProjectReference Include="..\NerdCritica.Domain\NerdCritica.Domain.csproj" />
   </ItemGroup>
 

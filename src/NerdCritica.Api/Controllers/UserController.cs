@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NerdCritica.Application.Services.User;
+using NerdCritica.Contracts.DTOs.User;
 using NerdCritica.Domain.Contracts;
-using NerdCritica.Domain.DTOs.User;
-using NerdCritica.Domain.Utils.Exceptions;
 
 namespace NerdCritica.Api.Controllers;
 

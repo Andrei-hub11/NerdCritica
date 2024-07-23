@@ -1,8 +1,5 @@
-﻿
-
-
+﻿using NerdCritica.Contracts.DTOs.Movie;
 using NerdCritica.Domain.Common;
-using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Entities.Aggregates;
 using NerdCritica.Domain.Utils.Exceptions;
 

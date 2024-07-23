@@ -1,5 +1,4 @@
-﻿using NerdCritica.Domain.DTOs.User;
-using NerdCritica.Domain.Utils;
+﻿using NerdCritica.Domain.Utils;
 
 namespace NerdCritica.Domain.Entities;
 

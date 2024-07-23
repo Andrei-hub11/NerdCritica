@@ -1,6 +1,6 @@
 ﻿using NerdCritica.Domain.Common;
-using NerdCritica.Domain.DTOs.Movie;
 using NerdCritica.Domain.Utils;
+using NerdCritica.Contracts.DTOs.Movie;
 
 namespace NerdCritica.TestProject.Helpers;
 

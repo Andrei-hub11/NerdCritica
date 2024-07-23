@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using FluentEmail.Core;
 using NerdCritica.Application.Services.EmailService;
 using NerdCritica.Application.Services.Images;
 using NerdCritica.Application.Services.Token;
-using NerdCritica.Domain.DTOs.User;
+using NerdCritica.Contracts.DTOs.User;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.ObjectValues;
 using NerdCritica.Domain.Repositories.Movies;

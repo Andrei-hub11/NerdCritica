@@ -1,5 +1,4 @@
-﻿using NerdCritica.Domain.DTOs.MappingsDapper;
-using NerdCritica.Domain.DTOs.Movie;
+﻿using NerdCritica.Contracts.DTOs.MappingsDapper;
 using NerdCritica.Domain.Entities;
 using NerdCritica.Domain.Entities.Aggregates;
 

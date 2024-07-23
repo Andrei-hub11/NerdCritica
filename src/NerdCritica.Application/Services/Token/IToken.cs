@@ -1,4 +1,4 @@
-﻿using NerdCritica.Domain.DTOs.MappingsDapper;
+﻿using NerdCritica.Contracts.DTOs.MappingsDapper;
 
 namespace NerdCritica.Application.Services.Token;
 

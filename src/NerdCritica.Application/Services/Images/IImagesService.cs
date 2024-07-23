@@ -1,5 +1,5 @@
-﻿using NerdCritica.Domain.Common;
-using NerdCritica.Domain.DTOs.Movie;
+﻿using NerdCritica.Contracts.DTOs.Movie;
+using NerdCritica.Domain.Common;
 
 namespace NerdCritica.Application.Services.Images;
 
