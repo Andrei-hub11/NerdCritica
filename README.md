@@ -1,3 +1,0 @@
-# NerdCritica
-
-## Em desenvolvimento...
